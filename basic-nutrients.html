@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basic Nutrients &amp; Their Functions</title>
+<style>
+  :root{
+    --bg:#000000;
+    --fg:#ffffff;
+    --dim:#8a8a8a;
+    --line:#2a2a2a;
+    --line-soft:#1a1a1a;
+    --green:#22c55e;
+    --red:#ef4444;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--fg);
+    font-family:"Space Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+  }
+  .screen{
+    display:none;
+    min-height:100vh;
+    padding:28px 20px 60px;
+  }
+  .screen.active{display:block;}
+  .wrap{max-width:560px;margin:0 auto;}
+
+  /* Intro screen */
+  a.back{color:var(--dim);text-decoration:none;font-size:13px;}
+  a.back:hover{color:var(--fg);}
+  h1{font-size:22px;margin:18px 0 6px;}
+  p.sub{color:var(--dim);font-size:13px;margin:0 0 28px;}
+  .info-box{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px;
+    margin-bottom:14px;
+  }
+  .info-row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;}
+  .info-row .k{color:var(--dim);}
+  .set-btns{display:flex;flex-direction:column;gap:12px;margin-top:20px;}
+  button.primary{
+    background:var(--fg);color:#000;border:none;border-radius:8px;
+    padding:14px;font-size:15px;font-weight:600;cursor:pointer;
+  }
+  button.secondary{
+    background:transparent;color:var(--fg);border:1px solid var(--line);
+    border-radius:8px;padding:14px;font-size:15px;cursor:pointer;
+  }
+  button.secondary:hover, button.primary:hover{border-color:var(--fg);}
+
+  /* Quiz runner */
+  .quiz-top{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .close-btn{
+    background:transparent;border:1px solid var(--line);color:var(--dim);
+    border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;
+  }
+  .close-btn:hover{color:var(--fg);border-color:var(--fg);}
+  .q-count{font-size:13px;color:var(--dim);}
+  .progress-track{
+    height:4px;background:var(--line-soft);border-radius:4px;overflow:hidden;margin-bottom:28px;
+  }
+  .progress-fill{
+    height:100%;background:var(--fg);width:0%;transition:width .25s ease;
+  }
+  .q-text{font-size:18px;line-height:1.5;margin-bottom:22px;}
+  .options{display:flex;flex-direction:column;gap:10px;}
+  .option{
+    border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+    font-size:14.5px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;
+  }
+  .option:hover{border-color:var(--fg);}
+  .option .letter{color:var(--dim);font-weight:600;min-width:16px;}
+  .option.correct{border-color:var(--green);background:rgba(34,197,94,0.08);}
+  .option.correct .letter{color:var(--green);}
+  .option.wrong{border-color:var(--red);background:rgba(239,68,68,0.08);}
+  .option.wrong .letter{color:var(--red);}
+  .option.disabled{cursor:default;}
+  .option.dim-out{opacity:0.4;}
+  .explanation{
+    margin-top:16px;padding:14px 16px;border-radius:10px;
+    font-size:13.5px;line-height:1.5;border:1px solid var(--line);
+  }
+  .explanation.wrong-exp{border-color:var(--red);color:#f3a9a9;}
+  .explanation.correct-exp{border-color:var(--green);color:#a9e6bf;}
+  .nav-row{
+    display:flex;justify-content:space-between;margin-top:28px;gap:10px;
+  }
+  .nav-row button{flex:1;}
+  button.nav-btn{
+    background:transparent;border:1px solid var(--line);color:var(--fg);
+    border-radius:8px;padding:12px;font-size:14px;cursor:pointer;
+  }
+  button.nav-btn:hover{border-color:var(--fg);}
+  button.nav-btn:disabled{opacity:0.3;cursor:default;}
+  button.nav-btn:disabled:hover{border-color:var(--line);}
+
+  /* Results screen */
+  .score-circle{
+    width:140px;height:140px;border-radius:50%;border:3px solid var(--fg);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    margin:20px auto;
+  }
+  .score-pct{font-size:32px;font-weight:700;}
+  .score-frac{font-size:12px;color:var(--dim);margin-top:2px;}
+  .result-msg{text-align:center;font-size:15px;line-height:1.5;margin:20px 0 8px;}
+  .pass-tag, .fail-tag{
+    text-align:center;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .pass-tag{color:var(--green);}
+  .fail-tag{color:var(--red);}
+  .result-btns{display:flex;flex-direction:column;gap:12px;margin-top:28px;}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- INTRO SCREEN -->
+<div class="screen active" id="screen-intro">
+  <div class="wrap">
+    <a class="back" href="index.html">&larr; Back to topics</a>
+    <h1>Basic Nutrients &amp; Their Functions</h1>
+    <p class="sub">DCA Exam Revision &middot; Topic 06</p>
+
+    <div class="info-box">
+      <div class="info-row"><span class="k">Total questions</span><span id="total-q-display">--</span></div>
+      <div class="info-row"><span class="k">Pass mark</span><span>70%</span></div>
+      <div class="info-row"><span class="k">Format</span><span id="format-display">--</span></div>
+    </div>
+
+    <div class="set-btns" id="set-btns"></div>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div class="screen" id="screen-quiz">
+  <div class="wrap">
+    <div class="quiz-top">
+      <button class="close-btn" onclick="closeTest()">Close Test</button>
+      <span class="q-count" id="q-count">Question 1 of 30</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options"></div>
+    <div id="explanation-holder"></div>
+    <div class="nav-row">
+      <button class="nav-btn" id="btn-back" onclick="goBack()">&larr; Back</button>
+      <button class="nav-btn" id="btn-next" onclick="goNext()" disabled>Next &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div class="screen" id="screen-results">
+  <div class="wrap">
+    <h1 style="text-align:center;">Set Complete</h1>
+    <div class="score-circle">
+      <div class="score-pct" id="score-pct">0%</div>
+      <div class="score-frac" id="score-frac">0 / 0</div>
+    </div>
+    <div id="pass-fail-tag"></div>
+    <p class="result-msg" id="result-msg"></p>
+    <div class="result-btns" id="result-btns"></div>
+  </div>
+</div>
+
+<script>
+  const questions = [
+ {
+  "q": "What are the six basic nutrients?",
+  "options": [
+   "Carbohydrates, proteins, fats, vitamins, minerals and water",
+   "Sugar, salt, fat, fibre, meat and milk",
+   "Grains, fruit, vegetables, dairy, meat and oil",
+   "Calories, protein, sugar, salt, fibre and iron"
+  ],
+  "correct": 0,
+  "exp": "These six nutrients are what the body needs from food to stay healthy."
+ },
+ {
+  "q": "What is the main function of carbohydrates?",
+  "options": [
+   "To provide energy",
+   "To build and repair body tissues",
+   "To protect against disease",
+   "To strengthen bones"
+  ],
+  "correct": 0,
+  "exp": "Carbohydrates are the body's main and fastest source of energy."
+ },
+ {
+  "q": "Which of these are complex carbohydrates that give long-lasting energy?",
+  "options": [
+   "Roti, rice and oats",
+   "Sugar and sweets",
+   "Fruit juice and fizzy drinks",
+   "Butter and oil"
+  ],
+  "correct": 0,
+  "exp": "Complex carbs (starches) take longer to digest, so they release energy slowly. Simple carbs such as sugar give quick energy."
+ },
+ {
+  "q": "What is the main function of protein?",
+  "options": [
+   "Growth and repair of body tissues and muscles",
+   "Providing quick energy",
+   "Keeping the body warm only",
+   "Transporting nutrients"
+  ],
+  "correct": 0,
+  "exp": "Protein is the body's \"builder\": it is needed for growth, repair and maintenance of muscles and tissues."
+ },
+ {
+  "q": "Which of these are plant sources of protein?",
+  "options": [
+   "Lentils, beans and nuts",
+   "Meat, chicken and eggs",
+   "Butter and cream",
+   "Rice and sugar"
+  ],
+  "correct": 0,
+  "exp": "Pulses (daal, beans, chickpeas), nuts and seeds are good plant proteins. Meat, fish, eggs and milk are animal proteins."
+ },
+ {
+  "q": "What are the main functions of fat in the body?",
+  "options": [
+   "Storing energy, keeping the body warm and protecting vital organs",
+   "Building muscles",
+   "Fighting infection",
+   "Carrying oxygen in the blood"
+  ],
+  "correct": 0,
+  "exp": "Fat is a concentrated energy store. It insulates the body, cushions organs and carries fat-soluble vitamins."
+ },
+ {
+  "q": "Which of these is a source of healthy (unsaturated) fat?",
+  "options": [
+   "Olive oil, nuts and oily fish",
+   "Deep-fried snacks",
+   "Ghee and butter",
+   "Fatty red meat"
+  ],
+  "correct": 0,
+  "exp": "Unsaturated fats from plants and fish are healthier. Saturated fats should be limited."
+ },
+ {
+  "q": "What is the main function of vitamins?",
+  "options": [
+   "Protecting the body from disease and helping it work properly",
+   "Providing most of the body's energy",
+   "Building bones only",
+   "Replacing water"
+  ],
+  "correct": 0,
+  "exp": "Vitamins are needed in small amounts to support immunity and normal body processes."
+ },
+ {
+  "q": "Which vitamins are fat-soluble (stored in the body's fat)?",
+  "options": [
+   "A, D, E and K",
+   "B and C",
+   "C only",
+   "B only"
+  ],
+  "correct": 0,
+  "exp": "Vitamins A, D, E and K dissolve in fat and can be stored. B and C dissolve in water and are needed daily."
+ },
+ {
+  "q": "Which vitamins are water-soluble and need to be eaten daily?",
+  "options": [
+   "Vitamin B and vitamin C",
+   "Vitamin A and vitamin D",
+   "Vitamin E and vitamin K",
+   "Vitamin D only"
+  ],
+  "correct": 0,
+  "exp": "Water-soluble vitamins are not stored for long, so they must be eaten regularly. They are also easily lost by overcooking vegetables."
+ },
+ {
+  "q": "A lack of vitamin C can cause:",
+  "options": [
+   "Scurvy",
+   "Rickets",
+   "Anaemia",
+   "Night blindness"
+  ],
+  "correct": 0,
+  "exp": "Scurvy causes bleeding gums and slow wound healing. Citrus fruits, guava and tomatoes are rich in vitamin C."
+ },
+ {
+  "q": "A lack of vitamin D can cause:",
+  "options": [
+   "Rickets (soft, weak bones)",
+   "Scurvy",
+   "Goitre",
+   "Anaemia"
+  ],
+  "correct": 0,
+  "exp": "Vitamin D helps the body absorb calcium. Without it, children's bones become soft and bend."
+ },
+ {
+  "q": "Which mineral is needed for strong bones and teeth?",
+  "options": [
+   "Calcium",
+   "Iron",
+   "Sodium",
+   "Iodine"
+  ],
+  "correct": 0,
+  "exp": "Calcium (from milk, yoghurt, cheese and green leaves) builds bones and teeth."
+ },
+ {
+  "q": "Which mineral is needed for healthy blood, and a lack of it causes anaemia?",
+  "options": [
+   "Iron",
+   "Calcium",
+   "Potassium",
+   "Zinc"
+  ],
+  "correct": 0,
+  "exp": "Iron helps red blood cells carry oxygen. Low iron leads to anaemia, causing tiredness and pale skin."
+ },
+ {
+  "q": "What are the functions of water in the body?",
+  "options": [
+   "Transporting nutrients, helping digestion, removing waste and controlling body temperature",
+   "Providing energy",
+   "Building muscle",
+   "Storing vitamins A and D"
+  ],
+  "correct": 0,
+  "exp": "Water is essential for almost every process in the body. Water-rich foods such as watermelon and cucumber also help."
+ },
+ {
+  "q": "Why is animal protein called \"complete\" protein?",
+  "options": [
+   "It contains all the essential amino acids the body needs",
+   "It contains no fat",
+   "It is cheaper than plant protein",
+   "It provides more vitamins than fruit"
+  ],
+  "correct": 0,
+  "exp": "Animal proteins contain all essential amino acids. Most plant proteins are incomplete, so they are best combined (for example, daal with rice)."
+ }
+];
+
+  const SET_SIZE = 30;
+  let currentSet = 1;
+  let setQuestions = [];
+  let currentIndex = 0;
+  let answers = []; // {selected, isCorrect}
+
+  function numSets(){ return Math.ceil(questions.length / SET_SIZE); }
+
+  function initIntroScreen(){
+    const total = questions.length;
+    document.getElementById('total-q-display').textContent = total;
+    const n = numSets();
+    document.getElementById('format-display').textContent = n > 1 ? `Split into ${n} sets (30 max per set)` : 'Single set';
+    const btnHolder = document.getElementById('set-btns');
+    btnHolder.innerHTML = '';
+    if(n === 1){
+      const btn = document.createElement('button');
+      btn.className = 'primary';
+      btn.textContent = `Start Quiz \u00b7 ${total} Questions`;
+      btn.onclick = () => startSet(1);
+      btnHolder.appendChild(btn);
+    } else {
+      for(let i=1;i<=n;i++){
+        const start = (i-1)*SET_SIZE+1;
+        const end = Math.min(i*SET_SIZE, total);
+        const btn = document.createElement('button');
+        btn.className = i===1 ? 'primary' : 'secondary';
+        btn.textContent = `Start Set ${i} \u00b7 Questions ${start}\u2013${end}`;
+        btn.onclick = () => startSet(i);
+        btnHolder.appendChild(btn);
+      }
+    }
+  }
+
+  function shuffleOptions(qObj){
+    const opts = qObj.options.map((text,i)=>({text, isCorrect:i===qObj.correct}));
+    for(let i=opts.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [opts[i],opts[j]]=[opts[j],opts[i]];
+    }
+    return opts;
+  }
+
+  function startSet(setNum){
+    currentSet = setNum;
+    const start = (setNum-1)*SET_SIZE;
+    const end = Math.min(setNum*SET_SIZE, questions.length);
+    setQuestions = questions.slice(start, end);
+    setQuestions = setQuestions.map(q=>({...q, shuffled: shuffleOptions(q)}));
+    currentIndex = 0;
+    answers = new Array(setQuestions.length).fill(null);
+    showScreen('screen-quiz');
+    renderQuestion();
+  }
+
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function renderQuestion(){
+    const total = setQuestions.length;
+    const qObj = setQuestions[currentIndex];
+    document.getElementById('q-count').textContent = `Question ${currentIndex+1} of ${total}`;
+    document.getElementById('progress-fill').style.width = `${((currentIndex+1)/total)*100}%`;
+    document.getElementById('q-text').textContent = qObj.q;
+
+    const optionsDiv = document.getElementById('options');
+    optionsDiv.innerHTML = '';
+    const letters = ['A','B','C','D'];
+    const existingAnswer = answers[currentIndex];
+
+    qObj.shuffled.forEach((opt, idx)=>{
+      const div = document.createElement('div');
+      div.className = 'option';
+      div.innerHTML = `<span class="letter">${letters[idx]}</span><span>${opt.text}</span>`;
+      if(existingAnswer !== null){
+        div.classList.add('disabled');
+        if(opt.isCorrect) div.classList.add('correct');
+        if(idx === existingAnswer.selectedIdx && !opt.isCorrect) div.classList.add('wrong');
+        if(!opt.isCorrect && idx !== existingAnswer.selectedIdx) div.classList.add('dim-out');
+      } else {
+        div.onclick = () => selectAnswer(idx);
+      }
+      optionsDiv.appendChild(div);
+    });
+
+    const holder = document.getElementById('explanation-holder');
+    holder.innerHTML = '';
+    if(existingAnswer !== null){
+      const exp = document.createElement('div');
+      exp.className = 'explanation ' + (existingAnswer.isCorrect ? 'correct-exp' : 'wrong-exp');
+      exp.textContent = existingAnswer.isCorrect ? 'Correct.' : ('Not quite. ' + qObj.exp);
+      holder.appendChild(exp);
+    }
+
+    document.getElementById('btn-back').disabled = currentIndex===0;
+    document.getElementById('btn-next').disabled = existingAnswer===null;
+    document.getElementById('btn-next').textContent = currentIndex===total-1 ? 'Finish' : 'Next \u2192';
+  }
+
+  function selectAnswer(idx){
+    const qObj = setQuestions[currentIndex];
+    const isCorrect = qObj.shuffled[idx].isCorrect;
+    answers[currentIndex] = {selectedIdx: idx, isCorrect};
+    renderQuestion();
+  }
+
+  function goNext(){
+    if(currentIndex < setQuestions.length-1){
+      currentIndex++;
+      renderQuestion();
+    } else {
+      showResults();
+    }
+  }
+
+  function goBack(){
+    if(currentIndex>0){
+      currentIndex--;
+      renderQuestion();
+    }
+  }
+
+  function closeTest(){
+    showScreen('screen-intro');
+  }
+
+  function showResults(){
+    const total = setQuestions.length;
+    const correctCount = answers.filter(a=>a && a.isCorrect).length;
+    const pct = Math.round((correctCount/total)*100);
+    document.getElementById('score-pct').textContent = pct + '%';
+    document.getElementById('score-frac').textContent = `${correctCount} / ${total}`;
+
+    const tagDiv = document.getElementById('pass-fail-tag');
+    const msgDiv = document.getElementById('result-msg');
+    const btnsDiv = document.getElementById('result-btns');
+    tagDiv.innerHTML = '';
+    btnsDiv.innerHTML = '';
+
+    const passed = pct >= 70;
+    const tag = document.createElement('div');
+    tag.className = passed ? 'pass-tag' : 'fail-tag';
+    tag.textContent = passed ? 'Passed' : 'Not Passed';
+    tagDiv.appendChild(tag);
+
+    let msg = '';
+    if(pct === 100){
+      msg = "Perfect score. You've fully mastered this section.";
+    } else if(pct >= 90){
+      msg = "Excellent work. Keep it up.";
+    } else if(pct >= 80){
+      msg = "Good result. Keep practicing to sharpen it further.";
+    } else if(passed){
+      msg = "You passed. A bit more review will make this even stronger.";
+    } else {
+      msg = "You didn't reach the 70% pass mark this time. Review the explanations and try again.";
+    }
+    msgDiv.textContent = msg;
+
+    const n = numSets();
+    if(passed){
+      if(n > 1 && currentSet < n){
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'primary';
+        nextBtn.textContent = `Continue to Set ${currentSet+1}`;
+        nextBtn.onclick = () => startSet(currentSet+1);
+        btnsDiv.appendChild(nextBtn);
+      } else if(n > 1 && currentSet === n){
+        const doneMsg = document.createElement('p');
+        doneMsg.style.textAlign = 'center';
+        doneMsg.style.color = '#8a8a8a';
+        doneMsg.style.fontSize = '13px';
+        doneMsg.textContent = "All sets complete.";
+        btnsDiv.appendChild(doneMsg);
+      }
+      const retakeBtn = document.createElement('button');
+      retakeBtn.className = 'secondary';
+      retakeBtn.textContent = 'Retake This Set';
+      retakeBtn.onclick = () => startSet(currentSet);
+      btnsDiv.appendChild(retakeBtn);
+    } else {
+      const retakeBtn = document.createElement('button');
+      retakeBtn.className = 'primary';
+      retakeBtn.textContent = 'Retake This Set';
+      retakeBtn.onclick = () => startSet(currentSet);
+      btnsDiv.appendChild(retakeBtn);
+    }
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'secondary';
+    closeBtn.textContent = 'Close Test';
+    closeBtn.onclick = closeTest;
+    btnsDiv.appendChild(closeBtn);
+
+    showScreen('screen-results');
+  }
+
+  initIntroScreen();
+
+</script>
+</body>
+</html>

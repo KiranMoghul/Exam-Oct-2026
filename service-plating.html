@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Call &amp; Pickup System, Plate Presentation, Dining Room Setup &amp; Waiters' Working Styles</title>
+<style>
+  :root{
+    --bg:#000000;
+    --fg:#ffffff;
+    --dim:#8a8a8a;
+    --line:#2a2a2a;
+    --line-soft:#1a1a1a;
+    --green:#22c55e;
+    --red:#ef4444;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--fg);
+    font-family:"Space Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+  }
+  .screen{
+    display:none;
+    min-height:100vh;
+    padding:28px 20px 60px;
+  }
+  .screen.active{display:block;}
+  .wrap{max-width:560px;margin:0 auto;}
+
+  /* Intro screen */
+  a.back{color:var(--dim);text-decoration:none;font-size:13px;}
+  a.back:hover{color:var(--fg);}
+  h1{font-size:22px;margin:18px 0 6px;}
+  p.sub{color:var(--dim);font-size:13px;margin:0 0 28px;}
+  .info-box{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px;
+    margin-bottom:14px;
+  }
+  .info-row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;}
+  .info-row .k{color:var(--dim);}
+  .set-btns{display:flex;flex-direction:column;gap:12px;margin-top:20px;}
+  button.primary{
+    background:var(--fg);color:#000;border:none;border-radius:8px;
+    padding:14px;font-size:15px;font-weight:600;cursor:pointer;
+  }
+  button.secondary{
+    background:transparent;color:var(--fg);border:1px solid var(--line);
+    border-radius:8px;padding:14px;font-size:15px;cursor:pointer;
+  }
+  button.secondary:hover, button.primary:hover{border-color:var(--fg);}
+
+  /* Quiz runner */
+  .quiz-top{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .close-btn{
+    background:transparent;border:1px solid var(--line);color:var(--dim);
+    border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;
+  }
+  .close-btn:hover{color:var(--fg);border-color:var(--fg);}
+  .q-count{font-size:13px;color:var(--dim);}
+  .progress-track{
+    height:4px;background:var(--line-soft);border-radius:4px;overflow:hidden;margin-bottom:28px;
+  }
+  .progress-fill{
+    height:100%;background:var(--fg);width:0%;transition:width .25s ease;
+  }
+  .q-text{font-size:18px;line-height:1.5;margin-bottom:22px;}
+  .options{display:flex;flex-direction:column;gap:10px;}
+  .option{
+    border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+    font-size:14.5px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;
+  }
+  .option:hover{border-color:var(--fg);}
+  .option .letter{color:var(--dim);font-weight:600;min-width:16px;}
+  .option.correct{border-color:var(--green);background:rgba(34,197,94,0.08);}
+  .option.correct .letter{color:var(--green);}
+  .option.wrong{border-color:var(--red);background:rgba(239,68,68,0.08);}
+  .option.wrong .letter{color:var(--red);}
+  .option.disabled{cursor:default;}
+  .option.dim-out{opacity:0.4;}
+  .explanation{
+    margin-top:16px;padding:14px 16px;border-radius:10px;
+    font-size:13.5px;line-height:1.5;border:1px solid var(--line);
+  }
+  .explanation.wrong-exp{border-color:var(--red);color:#f3a9a9;}
+  .explanation.correct-exp{border-color:var(--green);color:#a9e6bf;}
+  .nav-row{
+    display:flex;justify-content:space-between;margin-top:28px;gap:10px;
+  }
+  .nav-row button{flex:1;}
+  button.nav-btn{
+    background:transparent;border:1px solid var(--line);color:var(--fg);
+    border-radius:8px;padding:12px;font-size:14px;cursor:pointer;
+  }
+  button.nav-btn:hover{border-color:var(--fg);}
+  button.nav-btn:disabled{opacity:0.3;cursor:default;}
+  button.nav-btn:disabled:hover{border-color:var(--line);}
+
+  /* Results screen */
+  .score-circle{
+    width:140px;height:140px;border-radius:50%;border:3px solid var(--fg);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    margin:20px auto;
+  }
+  .score-pct{font-size:32px;font-weight:700;}
+  .score-frac{font-size:12px;color:var(--dim);margin-top:2px;}
+  .result-msg{text-align:center;font-size:15px;line-height:1.5;margin:20px 0 8px;}
+  .pass-tag, .fail-tag{
+    text-align:center;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .pass-tag{color:var(--green);}
+  .fail-tag{color:var(--red);}
+  .result-btns{display:flex;flex-direction:column;gap:12px;margin-top:28px;}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- INTRO SCREEN -->
+<div class="screen active" id="screen-intro">
+  <div class="wrap">
+    <a class="back" href="index.html">&larr; Back to topics</a>
+    <h1>Call &amp; Pickup System, Plate Presentation, Dining Room Setup &amp; Waiters' Working Styles</h1>
+    <p class="sub">DCA Exam Revision &middot; Topic 04</p>
+
+    <div class="info-box">
+      <div class="info-row"><span class="k">Total questions</span><span id="total-q-display">--</span></div>
+      <div class="info-row"><span class="k">Pass mark</span><span>70%</span></div>
+      <div class="info-row"><span class="k">Format</span><span id="format-display">--</span></div>
+    </div>
+
+    <div class="set-btns" id="set-btns"></div>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div class="screen" id="screen-quiz">
+  <div class="wrap">
+    <div class="quiz-top">
+      <button class="close-btn" onclick="closeTest()">Close Test</button>
+      <span class="q-count" id="q-count">Question 1 of 30</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options"></div>
+    <div id="explanation-holder"></div>
+    <div class="nav-row">
+      <button class="nav-btn" id="btn-back" onclick="goBack()">&larr; Back</button>
+      <button class="nav-btn" id="btn-next" onclick="goNext()" disabled>Next &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div class="screen" id="screen-results">
+  <div class="wrap">
+    <h1 style="text-align:center;">Set Complete</h1>
+    <div class="score-circle">
+      <div class="score-pct" id="score-pct">0%</div>
+      <div class="score-frac" id="score-frac">0 / 0</div>
+    </div>
+    <div id="pass-fail-tag"></div>
+    <p class="result-msg" id="result-msg"></p>
+    <div class="result-btns" id="result-btns"></div>
+  </div>
+</div>
+
+<script>
+  const questions = [
+ {
+  "q": "What is the call and pickup system in a restaurant kitchen?",
+  "options": [
+   "Orders are called out to the kitchen sections at the pass, and waiters collect the finished dishes from the pass when they are called",
+   "Guests call the kitchen by phone to collect their food",
+   "Waiters cook the food themselves at the table",
+   "Food is delivered to guests' homes"
+  ],
+  "correct": 0,
+  "exp": "At the pass, orders are called to each section. When a dish is ready and checked, the waiter is called to pick it up and serve it immediately."
+ },
+ {
+  "q": "Who usually calls out orders to the kitchen sections at the pass?",
+  "options": [
+   "The aboyeur (often the head chef or sous chef)",
+   "The kitchen porter",
+   "The cashier",
+   "The guest"
+  ],
+  "correct": 0,
+  "exp": "The aboyeur (\"barker\") reads the order tickets, calls them to each section and controls the timing of dishes leaving the kitchen."
+ },
+ {
+  "q": "What is the \"pass\" (hot plate)?",
+  "options": [
+   "The counter where finished dishes are checked by the chef and handed to the waiters",
+   "The door between the kitchen and the store",
+   "The dishwashing area",
+   "The staff entrance"
+  ],
+  "correct": 0,
+  "exp": "The pass is the link between kitchen and restaurant. Every plate is checked there for presentation, temperature and accuracy before it leaves."
+ },
+ {
+  "q": "What is a KOT?",
+  "options": [
+   "Kitchen Order Ticket — the written order the waiter sends to the kitchen",
+   "Kitchen Opening Time",
+   "Key Order Total",
+   "Kitchen Oven Temperature"
+  ],
+  "correct": 0,
+  "exp": "The waiter writes the order on a KOT (or enters it in the POS system) with table number, covers and dishes, and sends it to the kitchen."
+ },
+ {
+  "q": "Why must waiters pick up dishes as soon as they are called?",
+  "options": [
+   "So food reaches the guest at the correct temperature and quality",
+   "So the chef can take a break",
+   "So the waiter can eat first",
+   "It does not matter when dishes are picked up"
+  ],
+  "correct": 0,
+  "exp": "Food left on the pass cools down, dries out or melts. Prompt pickup keeps quality and food safety."
+ },
+ {
+  "q": "In the classic clock method of plating, where is the main protein usually placed?",
+  "options": [
+   "At 6 o'clock, nearest the guest",
+   "At 12 o'clock, furthest from the guest",
+   "Under the vegetables",
+   "On a side plate"
+  ],
+  "correct": 0,
+  "exp": "The protein usually sits at 6 o'clock, nearest the guest, with starch and vegetables arranged around it."
+ },
+ {
+  "q": "Before a plate leaves the pass, the rim should be:",
+  "options": [
+   "Wiped clean of drips, smears and fingerprints",
+   "Decorated with sauce all the way round",
+   "Left as it is to save time",
+   "Sprinkled with salt"
+  ],
+  "correct": 0,
+  "exp": "A clean rim frames the food. Drips or fingerprints make an otherwise good dish look careless."
+ },
+ {
+  "q": "Which rule is correct for plate temperature?",
+  "options": [
+   "Hot food on hot plates, cold food on cold plates",
+   "All food on room-temperature plates",
+   "Hot food on cold plates to cool it quickly",
+   "Cold food on hot plates"
+  ],
+  "correct": 0,
+  "exp": "A warm plate keeps hot food hot. A chilled plate keeps salads and cold desserts fresh."
+ },
+ {
+  "q": "Which of these is a principle of good plate presentation?",
+  "options": [
+   "Balance of colour, height and texture, with garnishes that are edible and suit the dish",
+   "Filling every part of the plate, including the rim",
+   "Using as many garnishes as possible",
+   "Using the same colour for every item"
+  ],
+  "correct": 0,
+  "exp": "Good plating is simple and balanced. Garnishes should be edible and relevant, and the dish should never look overcrowded."
+ },
+ {
+  "q": "In restaurant service, what is a \"cover\"?",
+  "options": [
+   "The place setting for one guest (cutlery, crockery, glassware and napkin); also used to mean one guest",
+   "The tablecloth",
+   "The lid placed over a hot dish",
+   "The menu card"
+  ],
+  "correct": 0,
+  "exp": "A cover is everything laid for one guest. \"50 covers\" also means 50 guests served."
+ },
+ {
+  "q": "What is mise en place in the dining room?",
+  "options": [
+   "Preparing the restaurant before service: laying tables, polishing cutlery and glasses, filling cruets and stocking sideboards",
+   "Cooking the main course",
+   "Cleaning the kitchen after service",
+   "Taking the guest's order"
+  ],
+  "correct": 0,
+  "exp": "Service runs smoothly only when everything is ready first: tables laid, sideboards stocked and equipment polished."
+ },
+ {
+  "q": "When laying a cover, where are the forks and knives placed?",
+  "options": [
+   "Forks on the left; knives on the right with the blade facing inward",
+   "Forks on the right; knives on the left",
+   "Both on the left",
+   "Both above the plate"
+  ],
+  "correct": 0,
+  "exp": "Forks go to the left, knives to the right with blades facing the plate. Cutlery is laid so the guest works from the outside in."
+ },
+ {
+  "q": "Where is the water glass placed on a laid table?",
+  "options": [
+   "Above the tip of the main knife, on the right",
+   "On the left, above the forks",
+   "In the centre of the plate",
+   "On the side plate"
+  ],
+  "correct": 0,
+  "exp": "Glasses are on the right, starting above the tip of the main knife, because most guests drink with the right hand."
+ },
+ {
+  "q": "Where is the side plate (bread plate) placed?",
+  "options": [
+   "On the left of the cover, with the butter knife on it",
+   "On the right, next to the knives",
+   "Above the water glass",
+   "It is never placed on the table"
+  ],
+  "correct": 0,
+  "exp": "The side plate sits on the left, beyond the forks, with the side knife resting on it."
+ },
+ {
+  "q": "In silver service, how is food served?",
+  "options": [
+   "The waiter serves food from a platter onto the guest's plate using a service spoon and fork, from the guest's left",
+   "Food is plated in the kitchen and placed in front of the guest",
+   "Guests serve themselves from a counter",
+   "Food is cooked at the table on a trolley"
+  ],
+  "correct": 0,
+  "exp": "Silver service needs skilled waiters who transfer food from a silver flat or dish onto the guest's plate, working from the left."
+ },
+ {
+  "q": "What is plated (American) service?",
+  "options": [
+   "Food is portioned and plated in the kitchen, then carried to the guest",
+   "The waiter carves food at the table",
+   "Guests help themselves from dishes on the table",
+   "Guests collect food from a counter"
+  ],
+  "correct": 0,
+  "exp": "Plated service is fast and keeps presentation exactly as the chef intended. It is the most common style today."
+ },
+ {
+  "q": "What is gueridon service?",
+  "options": [
+   "Food is finished, carved, flambéed or served from a side trolley (gueridon) beside the guest's table",
+   "Food is served at a self-service counter",
+   "Food is delivered to a hotel room",
+   "Food is placed in the centre of the table for sharing"
+  ],
+  "correct": 0,
+  "exp": "Gueridon service is a skilled, showy style. The waiter prepares or finishes dishes such as crêpes Suzette or steak Diane in front of the guest."
+ },
+ {
+  "q": "In family-style service:",
+  "options": [
+   "Dishes are placed on the table and guests help themselves and pass them around",
+   "Each guest is served individually from a trolley",
+   "Food is only served at a buffet",
+   "Food is plated and covered with a cloche"
+  ],
+  "correct": 0,
+  "exp": "Family service is relaxed and suits groups. Food comes in serving dishes and guests share it."
+ },
+ {
+  "q": "Beverages are generally served from the guest's:",
+  "options": [
+   "Right-hand side",
+   "Left-hand side",
+   "Behind the guest's head",
+   "It does not matter"
+  ],
+  "correct": 0,
+  "exp": "Glasses are on the right of the cover, so drinks are poured and served from the right."
+ },
+ {
+  "q": "When should plates be cleared from a table?",
+  "options": [
+   "When all guests at the table have finished that course",
+   "As soon as one guest finishes",
+   "Only at the end of the whole meal",
+   "While guests are still eating"
+  ],
+  "correct": 0,
+  "exp": "Clearing early rushes the guests who are still eating. Wait until everyone has finished, then clear from the right."
+ }
+];
+
+  const SET_SIZE = 30;
+  let currentSet = 1;
+  let setQuestions = [];
+  let currentIndex = 0;
+  let answers = []; // {selected, isCorrect}
+
+  function numSets(){ return Math.ceil(questions.length / SET_SIZE); }
+
+  function initIntroScreen(){
+    const total = questions.length;
+    document.getElementById('total-q-display').textContent = total;
+    const n = numSets();
+    document.getElementById('format-display').textContent = n > 1 ? `Split into ${n} sets (30 max per set)` : 'Single set';
+    const btnHolder = document.getElementById('set-btns');
+    btnHolder.innerHTML = '';
+    if(n === 1){
+      const btn = document.createElement('button');
+      btn.className = 'primary';
+      btn.textContent = `Start Quiz \u00b7 ${total} Questions`;
+      btn.onclick = () => startSet(1);
+      btnHolder.appendChild(btn);
+    } else {
+      for(let i=1;i<=n;i++){
+        const start = (i-1)*SET_SIZE+1;
+        const end = Math.min(i*SET_SIZE, total);
+        const btn = document.createElement('button');
+        btn.className = i===1 ? 'primary' : 'secondary';
+        btn.textContent = `Start Set ${i} \u00b7 Questions ${start}\u2013${end}`;
+        btn.onclick = () => startSet(i);
+        btnHolder.appendChild(btn);
+      }
+    }
+  }
+
+  function shuffleOptions(qObj){
+    const opts = qObj.options.map((text,i)=>({text, isCorrect:i===qObj.correct}));
+    for(let i=opts.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [opts[i],opts[j]]=[opts[j],opts[i]];
+    }
+    return opts;
+  }
+
+  function startSet(setNum){
+    currentSet = setNum;
+    const start = (setNum-1)*SET_SIZE;
+    const end = Math.min(setNum*SET_SIZE, questions.length);
+    setQuestions = questions.slice(start, end);
+    setQuestions = setQuestions.map(q=>({...q, shuffled: shuffleOptions(q)}));
+    currentIndex = 0;
+    answers = new Array(setQuestions.length).fill(null);
+    showScreen('screen-quiz');
+    renderQuestion();
+  }
+
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function renderQuestion(){
+    const total = setQuestions.length;
+    const qObj = setQuestions[currentIndex];
+    document.getElementById('q-count').textContent = `Question ${currentIndex+1} of ${total}`;
+    document.getElementById('progress-fill').style.width = `${((currentIndex+1)/total)*100}%`;
+    document.getElementById('q-text').textContent = qObj.q;
+
+    const optionsDiv = document.getElementById('options');
+    optionsDiv.innerHTML = '';
+    const letters = ['A','B','C','D'];
+    const existingAnswer = answers[currentIndex];
+
+    qObj.shuffled.forEach((opt, idx)=>{
+      const div = document.createElement('div');
+      div.className = 'option';
+      div.innerHTML = `<span class="letter">${letters[idx]}</span><span>${opt.text}</span>`;
+      if(existingAnswer !== null){
+        div.classList.add('disabled');
+        if(opt.isCorrect) div.classList.add('correct');
+        if(idx === existingAnswer.selectedIdx && !opt.isCorrect) div.classList.add('wrong');
+        if(!opt.isCorrect && idx !== existingAnswer.selectedIdx) div.classList.add('dim-out');
+      } else {
+        div.onclick = () => selectAnswer(idx);
+      }
+      optionsDiv.appendChild(div);
+    });
+
+    const holder = document.getElementById('explanation-holder');
+    holder.innerHTML = '';
+    if(existingAnswer !== null){
+      const exp = document.createElement('div');
+      exp.className = 'explanation ' + (existingAnswer.isCorrect ? 'correct-exp' : 'wrong-exp');
+      exp.textContent = existingAnswer.isCorrect ? 'Correct.' : ('Not quite. ' + qObj.exp);
+      holder.appendChild(exp);
+    }
+
+    document.getElementById('btn-back').disabled = currentIndex===0;
+    document.getElementById('btn-next').disabled = existingAnswer===null;
+    document.getElementById('btn-next').textContent = currentIndex===total-1 ? 'Finish' : 'Next \u2192';
+  }
+
+  function selectAnswer(idx){
+    const qObj = setQuestions[currentIndex];
+    const isCorrect = qObj.shuffled[idx].isCorrect;
+    answers[currentIndex] = {selectedIdx: idx, isCorrect};
+    renderQuestion();
+  }
+
+  function goNext(){
+    if(currentIndex < setQuestions.length-1){
+      currentIndex++;
+      renderQuestion();
+    } else {
+      showResults();
+    }
+  }
+
+  function goBack(){
+    if(currentIndex>0){
+      currentIndex--;
+      renderQuestion();
+    }
+  }
+
+  function closeTest(){
+    showScreen('screen-intro');
+  }
+
+  function showResults(){
+    const total = setQuestions.length;
+    const correctCount = answers.filter(a=>a && a.isCorrect).length;
+    const pct = Math.round((correctCount/total)*100);
+    document.getElementById('score-pct').textContent = pct + '%';
+    document.getElementById('score-frac').textContent = `${correctCount} / ${total}`;
+
+    const tagDiv = document.getElementById('pass-fail-tag');
+    const msgDiv = document.getElementById('result-msg');
+    const btnsDiv = document.getElementById('result-btns');
+    tagDiv.innerHTML = '';
+    btnsDiv.innerHTML = '';
+
+    const passed = pct >= 70;
+    const tag = document.createElement('div');
+    tag.className = passed ? 'pass-tag' : 'fail-tag';
+    tag.textContent = passed ? 'Passed' : 'Not Passed';
+    tagDiv.appendChild(tag);
+
+    let msg = '';
+    if(pct === 100){
+      msg = "Perfect score. You've fully mastered this section.";
+    } else if(pct >= 90){
+      msg = "Excellent work. Keep it up.";
+    } else if(pct >= 80){
+      msg = "Good result. Keep practicing to sharpen it further.";
+    } else if(passed){
+      msg = "You passed. A bit more review will make this even stronger.";
+    } else {
+      msg = "You didn't reach the 70% pass mark this time. Review the explanations and try again.";
+    }
+    msgDiv.textContent = msg;
+
+    const n = numSets();
+    if(passed){
+      if(n > 1 && currentSet < n){
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'primary';
+        nextBtn.textContent = `Continue to Set ${currentSet+1}`;
+        nextBtn.onclick = () => startSet(currentSet+1);
+        btnsDiv.appendChild(nextBtn);
+      } else if(n > 1 && currentSet === n){
+        const doneMsg = document.createElement('p');
+        doneMsg.style.textAlign = 'center';
+        doneMsg.style.color = '#8a8a8a';
+        doneMsg.style.fontSize = '13px';
+        doneMsg.textContent = "All sets complete.";
+        btnsDiv.appendChild(doneMsg);
+      }
+      const retakeBtn = document.createElement('button');
+      retakeBtn.className = 'secondary';
+      retakeBtn.textContent = 'Retake This Set';
+      retakeBtn.onclick = () => startSet(currentSet);
+      btnsDiv.appendChild(retakeBtn);
+    } else {
+      const retakeBtn = document.createElement('button');
+      retakeBtn.className = 'primary';
+      retakeBtn.textContent = 'Retake This Set';
+      retakeBtn.onclick = () => startSet(currentSet);
+      btnsDiv.appendChild(retakeBtn);
+    }
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'secondary';
+    closeBtn.textContent = 'Close Test';
+    closeBtn.onclick = closeTest;
+    btnsDiv.appendChild(closeBtn);
+
+    showScreen('screen-results');
+  }
+
+  initIntroScreen();
+
+</script>
+</body>
+</html>

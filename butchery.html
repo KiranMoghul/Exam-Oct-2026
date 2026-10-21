@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Butchery — Parts of Poultry &amp; Beef, and Practice in Cutting Meat</title>
+<style>
+  :root{
+    --bg:#000000;
+    --fg:#ffffff;
+    --dim:#8a8a8a;
+    --line:#2a2a2a;
+    --line-soft:#1a1a1a;
+    --green:#22c55e;
+    --red:#ef4444;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--fg);
+    font-family:"Space Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+  }
+  .screen{
+    display:none;
+    min-height:100vh;
+    padding:28px 20px 60px;
+  }
+  .screen.active{display:block;}
+  .wrap{max-width:560px;margin:0 auto;}
+
+  /* Intro screen */
+  a.back{color:var(--dim);text-decoration:none;font-size:13px;}
+  a.back:hover{color:var(--fg);}
+  h1{font-size:22px;margin:18px 0 6px;}
+  p.sub{color:var(--dim);font-size:13px;margin:0 0 28px;}
+  .info-box{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px;
+    margin-bottom:14px;
+  }
+  .info-row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;}
+  .info-row .k{color:var(--dim);}
+  .set-btns{display:flex;flex-direction:column;gap:12px;margin-top:20px;}
+  button.primary{
+    background:var(--fg);color:#000;border:none;border-radius:8px;
+    padding:14px;font-size:15px;font-weight:600;cursor:pointer;
+  }
+  button.secondary{
+    background:transparent;color:var(--fg);border:1px solid var(--line);
+    border-radius:8px;padding:14px;font-size:15px;cursor:pointer;
+  }
+  button.secondary:hover, button.primary:hover{border-color:var(--fg);}
+
+  /* Quiz runner */
+  .quiz-top{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .close-btn{
+    background:transparent;border:1px solid var(--line);color:var(--dim);
+    border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;
+  }
+  .close-btn:hover{color:var(--fg);border-color:var(--fg);}
+  .q-count{font-size:13px;color:var(--dim);}
+  .progress-track{
+    height:4px;background:var(--line-soft);border-radius:4px;overflow:hidden;margin-bottom:28px;
+  }
+  .progress-fill{
+    height:100%;background:var(--fg);width:0%;transition:width .25s ease;
+  }
+  .q-text{font-size:18px;line-height:1.5;margin-bottom:22px;}
+  .options{display:flex;flex-direction:column;gap:10px;}
+  .option{
+    border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+    font-size:14.5px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;
+  }
+  .option:hover{border-color:var(--fg);}
+  .option .letter{color:var(--dim);font-weight:600;min-width:16px;}
+  .option.correct{border-color:var(--green);background:rgba(34,197,94,0.08);}
+  .option.correct .letter{color:var(--green);}
+  .option.wrong{border-color:var(--red);background:rgba(239,68,68,0.08);}
+  .option.wrong .letter{color:var(--red);}
+  .option.disabled{cursor:default;}
+  .option.dim-out{opacity:0.4;}
+  .explanation{
+    margin-top:16px;padding:14px 16px;border-radius:10px;
+    font-size:13.5px;line-height:1.5;border:1px solid var(--line);
+  }
+  .explanation.wrong-exp{border-color:var(--red);color:#f3a9a9;}
+  .explanation.correct-exp{border-color:var(--green);color:#a9e6bf;}
+  .nav-row{
+    display:flex;justify-content:space-between;margin-top:28px;gap:10px;
+  }
+  .nav-row button{flex:1;}
+  button.nav-btn{
+    background:transparent;border:1px solid var(--line);color:var(--fg);
+    border-radius:8px;padding:12px;font-size:14px;cursor:pointer;
+  }
+  button.nav-btn:hover{border-color:var(--fg);}
+  button.nav-btn:disabled{opacity:0.3;cursor:default;}
+  button.nav-btn:disabled:hover{border-color:var(--line);}
+
+  /* Results screen */
+  .score-circle{
+    width:140px;height:140px;border-radius:50%;border:3px solid var(--fg);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    margin:20px auto;
+  }
+  .score-pct{font-size:32px;font-weight:700;}
+  .score-frac{font-size:12px;color:var(--dim);margin-top:2px;}
+  .result-msg{text-align:center;font-size:15px;line-height:1.5;margin:20px 0 8px;}
+  .pass-tag, .fail-tag{
+    text-align:center;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .pass-tag{color:var(--green);}
+  .fail-tag{color:var(--red);}
+  .result-btns{display:flex;flex-direction:column;gap:12px;margin-top:28px;}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- INTRO SCREEN -->
+<div class="screen active" id="screen-intro">
+  <div class="wrap">
+    <a class="back" href="index.html">&larr; Back to topics</a>
+    <h1>Butchery — Parts of Poultry &amp; Beef, and Practice in Cutting Meat</h1>
+    <p class="sub">DCA Exam Revision &middot; Topic 08</p>
+
+    <div class="info-box">
+      <div class="info-row"><span class="k">Total questions</span><span id="total-q-display">--</span></div>
+      <div class="info-row"><span class="k">Pass mark</span><span>70%</span></div>
+      <div class="info-row"><span class="k">Format</span><span id="format-display">--</span></div>
+    </div>
+
+    <div class="set-btns" id="set-btns"></div>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div class="screen" id="screen-quiz">
+  <div class="wrap">
+    <div class="quiz-top">
+      <button class="close-btn" onclick="closeTest()">Close Test</button>
+      <span class="q-count" id="q-count">Question 1 of 30</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options"></div>
+    <div id="explanation-holder"></div>
+    <div class="nav-row">
+      <button class="nav-btn" id="btn-back" onclick="goBack()">&larr; Back</button>
+      <button class="nav-btn" id="btn-next" onclick="goNext()" disabled>Next &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div class="screen" id="screen-results">
+  <div class="wrap">
+    <h1 style="text-align:center;">Set Complete</h1>
+    <div class="score-circle">
+      <div class="score-pct" id="score-pct">0%</div>
+      <div class="score-frac" id="score-frac">0 / 0</div>
+    </div>
+    <div id="pass-fail-tag"></div>
+    <p class="result-msg" id="result-msg"></p>
+    <div class="result-btns" id="result-btns"></div>
+  </div>
+</div>
+
+<script>
+  const questions = [
+ {
+  "q": "Which part of the chicken is white meat?",
+  "options": [
+   "Breast",
+   "Thigh",
+   "Drumstick",
+   "Back"
+  ],
+  "correct": 0,
+  "exp": "The breast is lean white meat. It cooks quickly and dries out if overcooked."
+ },
+ {
+  "q": "Which parts of the chicken are dark meat?",
+  "options": [
+   "Thigh and drumstick",
+   "Breast and wing",
+   "Breast only",
+   "Neck and head"
+  ],
+  "correct": 0,
+  "exp": "Leg muscles work harder, so they are darker, richer in flavour and more forgiving when cooked longer."
+ },
+ {
+  "q": "Which chicken parts are mainly used for making stock?",
+  "options": [
+   "Back, neck and carcass bones (feet for gelatin)",
+   "Breast fillets",
+   "Drumsticks",
+   "Suprêmes"
+  ],
+  "correct": 0,
+  "exp": "Bony parts and feet give flavour and gelatin to stock at low cost."
+ },
+ {
+  "q": "What is a chicken suprême?",
+  "options": [
+   "The breast with the wing bone attached",
+   "A boned, stuffed leg",
+   "A whole bird with the backbone removed",
+   "The drumstick and thigh together"
+  ],
+  "correct": 0,
+  "exp": "One chicken gives two suprêmes, each a skinned breast with the trimmed wing bone left on."
+ },
+ {
+  "q": "What is a spatchcock chicken?",
+  "options": [
+   "A whole chicken with the backbone removed and flattened for grilling",
+   "A chicken cut into eight pieces",
+   "A boned, stuffed leg",
+   "A chicken tied for roasting"
+  ],
+  "correct": 0,
+  "exp": "Removing the backbone and flattening the bird lets it cook quickly and evenly on a grill."
+ },
+ {
+  "q": "What is a ballotine?",
+  "options": [
+   "A boned, stuffed leg of poultry",
+   "The breast with the wing bone",
+   "Minced chicken",
+   "A chicken stock"
+  ],
+  "correct": 0,
+  "exp": "The thigh bone is removed and the leg is stuffed, rolled, tied and cooked."
+ },
+ {
+  "q": "Why is a chicken trussed before roasting?",
+  "options": [
+   "So it keeps its shape and cooks evenly",
+   "To make it cook faster on the outside only",
+   "To remove the fat",
+   "To add flavour"
+  ],
+  "correct": 0,
+  "exp": "Trussing with needle and string holds the legs and wings close to the body for even cooking and a neat appearance."
+ },
+ {
+  "q": "Which beef primal cut comes from the shoulder and is flavourful but tougher?",
+  "options": [
+   "Chuck",
+   "Loin",
+   "Rib",
+   "Tenderloin"
+  ],
+  "correct": 0,
+  "exp": "Chuck is a hard-working muscle, best for braising, stewing and mince."
+ },
+ {
+  "q": "Which beef primal cut comes from the hind leg and rump?",
+  "options": [
+   "Round",
+   "Brisket",
+   "Plate",
+   "Chuck"
+  ],
+  "correct": 0,
+  "exp": "The round (hind leg) is lean. It gives topside, silverside and eye of round."
+ },
+ {
+  "q": "Which beef primal cut comes from the lower chest?",
+  "options": [
+   "Brisket",
+   "Flank",
+   "Shank",
+   "Rib"
+  ],
+  "correct": 0,
+  "exp": "Brisket is tough and needs long, slow cooking such as braising or smoking."
+ },
+ {
+  "q": "Which is the most tender cut of beef?",
+  "options": [
+   "Fillet (tenderloin)",
+   "Shin (shank)",
+   "Brisket",
+   "Chuck"
+  ],
+  "correct": 0,
+  "exp": "The fillet lies under the loin and does almost no work, so it is the most tender and most expensive cut."
+ },
+ {
+  "q": "What is a chateaubriand?",
+  "options": [
+   "A thick steak cut from the head of the fillet, serving 2–4 people",
+   "A thin sirloin steak",
+   "A stew made from shin",
+   "A bone-in rib steak"
+  ],
+  "correct": 0,
+  "exp": "Chateaubriand is a double fillet steak cut from the thick head end of the fillet."
+ },
+ {
+  "q": "Why are cuts from the hindquarter generally more tender than the forequarter?",
+  "options": [
+   "Forequarter muscles are worked harder, so they are tougher",
+   "Hindquarter meat is younger",
+   "Forequarter meat has no fat",
+   "Hindquarter meat is always cooked longer"
+  ],
+  "correct": 0,
+  "exp": "Hard-working muscles (shoulder, leg, chest) have more connective tissue, so they suit slow, moist cooking."
+ },
+ {
+  "q": "What does good-quality beef look like?",
+  "options": [
+   "Bright red flesh with small flecks of creamy-white fat (marbling)",
+   "Grey flesh with yellow, sticky fat",
+   "Dark brown flesh with no fat",
+   "Pale pink flesh with watery juice"
+  ],
+  "correct": 0,
+  "exp": "Marbling adds flavour and juiciness. Fat should be firm, creamy-white and odourless."
+ },
+ {
+  "q": "Why is regular practice important in cutting meat?",
+  "options": [
+   "It improves safety, speed, yield and portion accuracy, so less meat is wasted",
+   "It makes the meat taste stronger",
+   "It is only needed for exams",
+   "It removes the need for sharp knives"
+  ],
+  "correct": 0,
+  "exp": "Skilled cutting gives more usable meat (better yield), even portions and fewer accidents, which all lower costs."
+ },
+ {
+  "q": "What is the main result of poor cutting and trimming skills?",
+  "options": [
+   "Lower yield and higher food cost because more meat is wasted",
+   "Better-tasting dishes",
+   "Faster cooking",
+   "Lower selling prices"
+  ],
+  "correct": 0,
+  "exp": "Leaving meat on the bone or trimming too heavily wastes product you have paid for."
+ },
+ {
+  "q": "Why should meat be cut into pieces of the same size?",
+  "options": [
+   "So it cooks evenly and every portion is the same",
+   "So it looks bigger",
+   "So it needs less seasoning",
+   "It does not matter"
+  ],
+  "correct": 0,
+  "exp": "Uniform pieces finish cooking at the same time, and portions match the standard recipe and its costing."
+ },
+ {
+  "q": "Why is meat usually sliced against the grain?",
+  "options": [
+   "It shortens the muscle fibres, making the meat more tender to eat",
+   "It makes the meat cook faster",
+   "It keeps the meat red",
+   "It makes slicing slower and safer"
+  ],
+  "correct": 0,
+  "exp": "Cutting across the fibres gives short strands that are easier to chew."
+ },
+ {
+  "q": "Why is a sharp knife safer than a blunt one when cutting meat?",
+  "options": [
+   "It needs less force, so it is less likely to slip",
+   "It cuts more slowly",
+   "It never needs cleaning",
+   "Blunt knives are actually safer"
+  ],
+  "correct": 0,
+  "exp": "A blunt knife needs more pressure and can skid off the meat. Keep knives sharp and cut away from the body."
+ },
+ {
+  "q": "Which colour-coded chopping board is used for raw meat?",
+  "options": [
+   "Red",
+   "Green",
+   "Blue",
+   "White"
+  ],
+  "correct": 0,
+  "exp": "Red is for raw meat, yellow for cooked meat, blue for raw fish, green for salad and fruit, brown for vegetables, and white for bakery and dairy."
+ }
+];
+
+  const SET_SIZE = 30;
+  let currentSet = 1;
+  let setQuestions = [];
+  let currentIndex = 0;
+  let answers = []; // {selected, isCorrect}
+
+  function numSets(){ return Math.ceil(questions.length / SET_SIZE); }
+
+  function initIntroScreen(){
+    const total = questions.length;
+    document.getElementById('total-q-display').textContent = total;
+    const n = numSets();
+    document.getElementById('format-display').textContent = n > 1 ? `Split into ${n} sets (30 max per set)` : 'Single set';
+    const btnHolder = document.getElementById('set-btns');
+    btnHolder.innerHTML = '';
+    if(n === 1){
+      const btn = document.createElement('button');
+      btn.className = 'primary';
+      btn.textContent = `Start Quiz \u00b7 ${total} Questions`;
+      btn.onclick = () => startSet(1);
+      btnHolder.appendChild(btn);
+    } else {
+      for(let i=1;i<=n;i++){
+        const start = (i-1)*SET_SIZE+1;
+        const end = Math.min(i*SET_SIZE, total);
+        const btn = document.createElement('button');
+        btn.className = i===1 ? 'primary' : 'secondary';
+        btn.textContent = `Start Set ${i} \u00b7 Questions ${start}\u2013${end}`;
+        btn.onclick = () => startSet(i);
+        btnHolder.appendChild(btn);
+      }
+    }
+  }
+
+  function shuffleOptions(qObj){
+    const opts = qObj.options.map((text,i)=>({text, isCorrect:i===qObj.correct}));
+    for(let i=opts.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [opts[i],opts[j]]=[opts[j],opts[i]];
+    }
+    return opts;
+  }
+
+  function startSet(setNum){
+    currentSet = setNum;
+    const start = (setNum-1)*SET_SIZE;
+    const end = Math.min(setNum*SET_SIZE, questions.length);
+    setQuestions = questions.slice(start, end);
+    setQuestions = setQuestions.map(q=>({...q, shuffled: shuffleOptions(q)}));
+    currentIndex = 0;
+    answers = new Array(setQuestions.length).fill(null);
+    showScreen('screen-quiz');
+    renderQuestion();
+  }
+
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function renderQuestion(){
+    const total = setQuestions.length;
+    const qObj = setQuestions[currentIndex];
+    document.getElementById('q-count').textContent = `Question ${currentIndex+1} of ${total}`;
+    document.getElementById('progress-fill').style.width = `${((currentIndex+1)/total)*100}%`;
+    document.getElementById('q-text').textContent = qObj.q;
+
+    const optionsDiv = document.getElementById('options');
+    optionsDiv.innerHTML = '';
+    const letters = ['A','B','C','D'];
+    const existingAnswer = answers[currentIndex];
+
+    qObj.shuffled.forEach((opt, idx)=>{
+      const div = document.createElement('div');
+      div.className = 'option';
+      div.innerHTML = `<span class="letter">${letters[idx]}</span><span>${opt.text}</span>`;
+      if(existingAnswer !== null){
+        div.classList.add('disabled');
+        if(opt.isCorrect) div.classList.add('correct');
+        if(idx === existingAnswer.selectedIdx && !opt.isCorrect) div.classList.add('wrong');
+        if(!opt.isCorrect && idx !== existingAnswer.selectedIdx) div.classList.add('dim-out');
+      } else {
+        div.onclick = () => selectAnswer(idx);
+      }
+      optionsDiv.appendChild(div);
+    });
+
+    const holder = document.getElementById('explanation-holder');
+    holder.innerHTML = '';
+    if(existingAnswer !== null){
+      const exp = document.createElement('div');
+      exp.className = 'explanation ' + (existingAnswer.isCorrect ? 'correct-exp' : 'wrong-exp');
+      exp.textContent = existingAnswer.isCorrect ? 'Correct.' : ('Not quite. ' + qObj.exp);
+      holder.appendChild(exp);
+    }
+
+    document.getElementById('btn-back').disabled = currentIndex===0;
+    document.getElementById('btn-next').disabled = existingAnswer===null;
+    document.getElementById('btn-next').textContent = currentIndex===total-1 ? 'Finish' : 'Next \u2192';
+  }
+
+  function selectAnswer(idx){
+    const qObj = setQuestions[currentIndex];
+    const isCorrect = qObj.shuffled[idx].isCorrect;
+    answers[currentIndex] = {selectedIdx: idx, isCorrect};
+    renderQuestion();
+  }
+
+  function goNext(){
+    if(currentIndex < setQuestions.length-1){
+      currentIndex++;
+      renderQuestion();
+    } else {
+      showResults();
+    }
+  }
+
+  function goBack(){
+    if(currentIndex>0){
+      currentIndex--;
+      renderQuestion();
+    }
+  }
+
+  function closeTest(){
+    showScreen('screen-intro');
+  }
+
+  function showResults(){
+    const total = setQuestions.length;
+    const correctCount = answers.filter(a=>a && a.isCorrect).length;
+    const pct = Math.round((correctCount/total)*100);
+    document.getElementById('score-pct').textContent = pct + '%';
+    document.getElementById('score-frac').textContent = `${correctCount} / ${total}`;
+
+    const tagDiv = document.getElementById('pass-fail-tag');
+    const msgDiv = document.getElementById('result-msg');
+    const btnsDiv = document.getElementById('result-btns');
+    tagDiv.innerHTML = '';
+    btnsDiv.innerHTML = '';
+
+    const passed = pct >= 70;
+    const tag = document.createElement('div');
+    tag.className = passed ? 'pass-tag' : 'fail-tag';
+    tag.textContent = passed ? 'Passed' : 'Not Passed';
+    tagDiv.appendChild(tag);
+
+    let msg = '';
+    if(pct === 100){
+      msg = "Perfect score. You've fully mastered this section.";
+    } else if(pct >= 90){
+      msg = "Excellent work. Keep it up.";
+    } else if(pct >= 80){
+      msg = "Good result. Keep practicing to sharpen it further.";
+    } else if(passed){
+      msg = "You passed. A bit more review will make this even stronger.";
+    } else {
+      msg = "You didn't reach the 70% pass mark this time. Review the explanations and try again.";
+    }
+    msgDiv.textContent = msg;
+
+    const n = numSets();
+    if(passed){
+      if(n > 1 && currentSet < n){
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'primary';
+        nextBtn.textContent = `Continue to Set ${currentSet+1}`;
+        nextBtn.onclick = () => startSet(currentSet+1);
+        btnsDiv.appendChild(nextBtn);
+      } else if(n > 1 && currentSet === n){
+        const doneMsg = document.createElement('p');
+        doneMsg.style.textAlign = 'center';
+        doneMsg.style.color = '#8a8a8a';
+        doneMsg.style.fontSize = '13px';
+        doneMsg.textContent = "All sets complete.";
+        btnsDiv.appendChild(doneMsg);
+      }
+      const retakeBtn = document.createElement('button');
+      retakeBtn.className = 'secondary';
+      retakeBtn.textContent = 'Retake This Set';
+      retakeBtn.onclick = () => startSet(currentSet);
+      btnsDiv.appendChild(retakeBtn);
+    } else {
+      const retakeBtn = document.createElement('button');
+      retakeBtn.className = 'primary';
+      retakeBtn.textContent = 'Retake This Set';
+      retakeBtn.onclick = () => startSet(currentSet);
+      btnsDiv.appendChild(retakeBtn);
+    }
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'secondary';
+    closeBtn.textContent = 'Close Test';
+    closeBtn.onclick = closeTest;
+    btnsDiv.appendChild(closeBtn);
+
+    showScreen('screen-results');
+  }
+
+  initIntroScreen();
+
+</script>
+</body>
+</html>

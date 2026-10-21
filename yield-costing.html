@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yield Testing &amp; Cost of Meals</title>
+<style>
+  :root{
+    --bg:#000000;
+    --fg:#ffffff;
+    --dim:#8a8a8a;
+    --line:#2a2a2a;
+    --line-soft:#1a1a1a;
+    --green:#22c55e;
+    --red:#ef4444;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--fg);
+    font-family:"Space Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+  }
+  .screen{
+    display:none;
+    min-height:100vh;
+    padding:28px 20px 60px;
+  }
+  .screen.active{display:block;}
+  .wrap{max-width:560px;margin:0 auto;}
+
+  /* Intro screen */
+  a.back{color:var(--dim);text-decoration:none;font-size:13px;}
+  a.back:hover{color:var(--fg);}
+  h1{font-size:22px;margin:18px 0 6px;}
+  p.sub{color:var(--dim);font-size:13px;margin:0 0 28px;}
+  .info-box{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px;
+    margin-bottom:14px;
+  }
+  .info-row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;}
+  .info-row .k{color:var(--dim);}
+  .set-btns{display:flex;flex-direction:column;gap:12px;margin-top:20px;}
+  button.primary{
+    background:var(--fg);color:#000;border:none;border-radius:8px;
+    padding:14px;font-size:15px;font-weight:600;cursor:pointer;
+  }
+  button.secondary{
+    background:transparent;color:var(--fg);border:1px solid var(--line);
+    border-radius:8px;padding:14px;font-size:15px;cursor:pointer;
+  }
+  button.secondary:hover, button.primary:hover{border-color:var(--fg);}
+
+  /* Quiz runner */
+  .quiz-top{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .close-btn{
+    background:transparent;border:1px solid var(--line);color:var(--dim);
+    border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;
+  }
+  .close-btn:hover{color:var(--fg);border-color:var(--fg);}
+  .q-count{font-size:13px;color:var(--dim);}
+  .progress-track{
+    height:4px;background:var(--line-soft);border-radius:4px;overflow:hidden;margin-bottom:28px;
+  }
+  .progress-fill{
+    height:100%;background:var(--fg);width:0%;transition:width .25s ease;
+  }
+  .q-text{font-size:18px;line-height:1.5;margin-bottom:22px;}
+  .options{display:flex;flex-direction:column;gap:10px;}
+  .option{
+    border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+    font-size:14.5px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;
+  }
+  .option:hover{border-color:var(--fg);}
+  .option .letter{color:var(--dim);font-weight:600;min-width:16px;}
+  .option.correct{border-color:var(--green);background:rgba(34,197,94,0.08);}
+  .option.correct .letter{color:var(--green);}
+  .option.wrong{border-color:var(--red);background:rgba(239,68,68,0.08);}
+  .option.wrong .letter{color:var(--red);}
+  .option.disabled{cursor:default;}
+  .option.dim-out{opacity:0.4;}
+  .explanation{
+    margin-top:16px;padding:14px 16px;border-radius:10px;
+    font-size:13.5px;line-height:1.5;border:1px solid var(--line);
+  }
+  .explanation.wrong-exp{border-color:var(--red);color:#f3a9a9;}
+  .explanation.correct-exp{border-color:var(--green);color:#a9e6bf;}
+  .nav-row{
+    display:flex;justify-content:space-between;margin-top:28px;gap:10px;
+  }
+  .nav-row button{flex:1;}
+  button.nav-btn{
+    background:transparent;border:1px solid var(--line);color:var(--fg);
+    border-radius:8px;padding:12px;font-size:14px;cursor:pointer;
+  }
+  button.nav-btn:hover{border-color:var(--fg);}
+  button.nav-btn:disabled{opacity:0.3;cursor:default;}
+  button.nav-btn:disabled:hover{border-color:var(--line);}
+
+  /* Results screen */
+  .score-circle{
+    width:140px;height:140px;border-radius:50%;border:3px solid var(--fg);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    margin:20px auto;
+  }
+  .score-pct{font-size:32px;font-weight:700;}
+  .score-frac{font-size:12px;color:var(--dim);margin-top:2px;}
+  .result-msg{text-align:center;font-size:15px;line-height:1.5;margin:20px 0 8px;}
+  .pass-tag, .fail-tag{
+    text-align:center;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .pass-tag{color:var(--green);}
+  .fail-tag{color:var(--red);}
+  .result-btns{display:flex;flex-direction:column;gap:12px;margin-top:28px;}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- INTRO SCREEN -->
+<div class="screen active" id="screen-intro">
+  <div class="wrap">
+    <a class="back" href="index.html">&larr; Back to topics</a>
+    <h1>Yield Testing &amp; Cost of Meals</h1>
+    <p class="sub">DCA Exam Revision &middot; Topic 03</p>
+
+    <div class="info-box">
+      <div class="info-row"><span class="k">Total questions</span><span id="total-q-display">--</span></div>
+      <div class="info-row"><span class="k">Pass mark</span><span>70%</span></div>
+      <div class="info-row"><span class="k">Format</span><span id="format-display">--</span></div>
+    </div>
+
+    <div class="set-btns" id="set-btns"></div>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div class="screen" id="screen-quiz">
+  <div class="wrap">
+    <div class="quiz-top">
+      <button class="close-btn" onclick="closeTest()">Close Test</button>
+      <span class="q-count" id="q-count">Question 1 of 30</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options"></div>
+    <div id="explanation-holder"></div>
+    <div class="nav-row">
+      <button class="nav-btn" id="btn-back" onclick="goBack()">&larr; Back</button>
+      <button class="nav-btn" id="btn-next" onclick="goNext()" disabled>Next &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div class="screen" id="screen-results">
+  <div class="wrap">
+    <h1 style="text-align:center;">Set Complete</h1>
+    <div class="score-circle">
+      <div class="score-pct" id="score-pct">0%</div>
+      <div class="score-frac" id="score-frac">0 / 0</div>
+    </div>
+    <div id="pass-fail-tag"></div>
+    <p class="result-msg" id="result-msg"></p>
+    <div class="result-btns" id="result-btns"></div>
+  </div>
+</div>
+
+<script>
+  const questions = [
+ {
+  "q": "What is a yield test?",
+  "options": [
+   "A test to find how much usable product remains after trimming, boning or cooking",
+   "A test of how fast a dish can be cooked",
+   "A taste test by the head chef",
+   "A check on the supplier's prices"
+  ],
+  "correct": 0,
+  "exp": "A yield test weighs a product before and after preparation to find the usable (edible) amount and the true cost."
+ },
+ {
+  "q": "In yield testing, what do AP and EP stand for?",
+  "options": [
+   "As Purchased and Edible Portion",
+   "Average Price and Extra Portion",
+   "All Parts and End Product",
+   "Actual Profit and Expected Price"
+  ],
+  "correct": 0,
+  "exp": "AP is the weight or cost as bought. EP is the usable weight after trimming or cooking."
+ },
+ {
+  "q": "What is the formula for yield percentage?",
+  "options": [
+   "EP weight ÷ AP weight × 100",
+   "AP weight ÷ EP weight × 100",
+   "AP weight − EP weight",
+   "EP weight × AP weight"
+  ],
+  "correct": 0,
+  "exp": "Yield % = usable (EP) weight ÷ purchased (AP) weight × 100."
+ },
+ {
+  "q": "10 kg of beef is bought. After trimming, 7 kg is usable. What is the yield percentage?",
+  "options": [
+   "70%",
+   "30%",
+   "17%",
+   "143%"
+  ],
+  "correct": 0,
+  "exp": "7 ÷ 10 × 100 = 70%."
+ },
+ {
+  "q": "What is a cooking loss test?",
+  "options": [
+   "A test measuring the weight lost when a product is cooked, such as a roast",
+   "A test of how much food is thrown away after service",
+   "A test of oven temperature",
+   "A check on staff cooking skills"
+  ],
+  "correct": 0,
+  "exp": "Meat loses weight (water and fat) during cooking. A cooking loss test shows the cooked yield, which is used for accurate portion costing."
+ },
+ {
+  "q": "Why is yield testing important for cost control?",
+  "options": [
+   "It shows the true cost of the usable product and how much to order",
+   "It increases the weight of the meat",
+   "It reduces cooking time",
+   "It removes the need for standard recipes"
+  ],
+  "correct": 0,
+  "exp": "If you ignore trim and cooking loss, your portion costs will be too low and your prices will be wrong."
+ },
+ {
+  "q": "Beef costs Rs 1,000 per kg as purchased and the yield is 50%. What is the true cost per usable kg?",
+  "options": [
+   "Rs 2,000",
+   "Rs 500",
+   "Rs 1,000",
+   "Rs 1,500"
+  ],
+  "correct": 0,
+  "exp": "True (EP) cost = AP price ÷ yield = 1,000 ÷ 0.50 = Rs 2,000 per usable kg."
+ },
+ {
+  "q": "You need 7 kg of trimmed meat and the yield is 70%. How much should you buy?",
+  "options": [
+   "10 kg",
+   "4.9 kg",
+   "7 kg",
+   "14 kg"
+  ],
+  "correct": 0,
+  "exp": "Quantity to buy = EP needed ÷ yield = 7 ÷ 0.70 = 10 kg."
+ },
+ {
+  "q": "How is the cost per portion calculated?",
+  "options": [
+   "Total recipe cost ÷ number of portions",
+   "Selling price ÷ number of portions",
+   "Total recipe cost × number of portions",
+   "Selling price − total recipe cost"
+  ],
+  "correct": 0,
+  "exp": "Divide the total cost of all ingredients by the number of portions the recipe yields."
+ },
+ {
+  "q": "A recipe costs Rs 2,400 to make and yields 12 portions. What is the cost per portion?",
+  "options": [
+   "Rs 200",
+   "Rs 120",
+   "Rs 240",
+   "Rs 2,412"
+  ],
+  "correct": 0,
+  "exp": "2,400 ÷ 12 = Rs 200 per portion."
+ },
+ {
+  "q": "What is the formula for food cost percentage of a dish?",
+  "options": [
+   "Food cost ÷ selling price × 100",
+   "Selling price ÷ food cost × 100",
+   "Food cost − selling price",
+   "Gross profit × food cost"
+  ],
+  "correct": 0,
+  "exp": "Food cost % shows what share of the selling price is spent on ingredients."
+ },
+ {
+  "q": "A dish costs Rs 300 to make and the target food cost is 30%. What should the selling price be?",
+  "options": [
+   "Rs 1,000",
+   "Rs 900",
+   "Rs 390",
+   "Rs 330"
+  ],
+  "correct": 0,
+  "exp": "Selling price = (food cost ÷ food cost %) × 100 = (300 ÷ 30) × 100 = Rs 1,000."
+ },
+ {
+  "q": "What is gross profit (kitchen profit)?",
+  "options": [
+   "Selling price minus food cost",
+   "Selling price minus all costs including labour and overheads",
+   "Food cost plus labour",
+   "Total sales for the month"
+  ],
+  "correct": 0,
+  "exp": "Gross profit = selling price − food cost. Net profit also subtracts labour and overheads."
+ },
+ {
+  "q": "What is generally considered a healthy food cost percentage for a restaurant?",
+  "options": [
+   "Around 30–35%",
+   "Around 70–80%",
+   "Around 5%",
+   "Around 50–60%"
+  ],
+  "correct": 0,
+  "exp": "Most restaurants aim for a food cost of roughly 30–35% (sometimes given as 28–35%) of the selling price."
+ },
+ {
+  "q": "What is the food cost formula for a period (such as a month)?",
+  "options": [
+   "(Opening stock + Purchases − Closing stock) ÷ Sales × 100",
+   "(Sales − Purchases) ÷ Closing stock × 100",
+   "Opening stock + Closing stock + Sales",
+   "Purchases ÷ Opening stock × 100"
+  ],
+  "correct": 0,
+  "exp": "Opening stock + purchases − closing stock gives the cost of food used. Divide by sales and multiply by 100 to get the percentage."
+ },
+ {
+  "q": "Which of these is a fixed cost?",
+  "options": [
+   "Rent",
+   "Food",
+   "Gas used for cooking",
+   "Packaging for takeaway orders"
+  ],
+  "correct": 0,
+  "exp": "Fixed costs, such as rent and insurance, stay the same however busy you are. Variable costs, such as food, rise and fall with business."
+ },
+ {
+  "q": "Why is portion control important for cost management?",
+  "options": [
+   "It keeps every portion the same size, so costs and gross profit stay as planned",
+   "It allows larger portions for regular guests",
+   "It makes dishes cook faster",
+   "It removes the need for a menu"
+  ],
+  "correct": 0,
+  "exp": "Over-portioning raises the food cost and cuts profit; under-portioning disappoints guests. Fixed portions keep both under control."
+ }
+];
+
+  const SET_SIZE = 30;
+  let currentSet = 1;
+  let setQuestions = [];
+  let currentIndex = 0;
+  let answers = []; // {selected, isCorrect}
+
+  function numSets(){ return Math.ceil(questions.length / SET_SIZE); }
+
+  function initIntroScreen(){
+    const total = questions.length;
+    document.getElementById('total-q-display').textContent = total;
+    const n = numSets();
+    document.getElementById('format-display').textContent = n > 1 ? `Split into ${n} sets (30 max per set)` : 'Single set';
+    const btnHolder = document.getElementById('set-btns');
+    btnHolder.innerHTML = '';
+    if(n === 1){
+      const btn = document.createElement('button');
+      btn.className = 'primary';
+      btn.textContent = `Start Quiz \u00b7 ${total} Questions`;
+      btn.onclick = () => startSet(1);
+      btnHolder.appendChild(btn);
+    } else {
+      for(let i=1;i<=n;i++){
+        const start = (i-1)*SET_SIZE+1;
+        const end = Math.min(i*SET_SIZE, total);
+        const btn = document.createElement('button');
+        btn.className = i===1 ? 'primary' : 'secondary';
+        btn.textContent = `Start Set ${i} \u00b7 Questions ${start}\u2013${end}`;
+        btn.onclick = () => startSet(i);
+        btnHolder.appendChild(btn);
+      }
+    }
+  }
+
+  function shuffleOptions(qObj){
+    const opts = qObj.options.map((text,i)=>({text, isCorrect:i===qObj.correct}));
+    for(let i=opts.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [opts[i],opts[j]]=[opts[j],opts[i]];
+    }
+    return opts;
+  }
+
+  function startSet(setNum){
+    currentSet = setNum;
+    const start = (setNum-1)*SET_SIZE;
+    const end = Math.min(setNum*SET_SIZE, questions.length);
+    setQuestions = questions.slice(start, end);
+    setQuestions = setQuestions.map(q=>({...q, shuffled: shuffleOptions(q)}));
+    currentIndex = 0;
+    answers = new Array(setQuestions.length).fill(null);
+    showScreen('screen-quiz');
+    renderQuestion();
+  }
+
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function renderQuestion(){
+    const total = setQuestions.length;
+    const qObj = setQuestions[currentIndex];
+    document.getElementById('q-count').textContent = `Question ${currentIndex+1} of ${total}`;
+    document.getElementById('progress-fill').style.width = `${((currentIndex+1)/total)*100}%`;
+    document.getElementById('q-text').textContent = qObj.q;
+
+    const optionsDiv = document.getElementById('options');
+    optionsDiv.innerHTML = '';
+    const letters = ['A','B','C','D'];
+    const existingAnswer = answers[currentIndex];
+
+    qObj.shuffled.forEach((opt, idx)=>{
+      const div = document.createElement('div');
+      div.className = 'option';
+      div.innerHTML = `<span class="letter">${letters[idx]}</span><span>${opt.text}</span>`;
+      if(existingAnswer !== null){
+        div.classList.add('disabled');
+        if(opt.isCorrect) div.classList.add('correct');
+        if(idx === existingAnswer.selectedIdx && !opt.isCorrect) div.classList.add('wrong');
+        if(!opt.isCorrect && idx !== existingAnswer.selectedIdx) div.classList.add('dim-out');
+      } else {
+        div.onclick = () => selectAnswer(idx);
+      }
+      optionsDiv.appendChild(div);
+    });
+
+    const holder = document.getElementById('explanation-holder');
+    holder.innerHTML = '';
+    if(existingAnswer !== null){
+      const exp = document.createElement('div');
+      exp.className = 'explanation ' + (existingAnswer.isCorrect ? 'correct-exp' : 'wrong-exp');
+      exp.textContent = existingAnswer.isCorrect ? 'Correct.' : ('Not quite. ' + qObj.exp);
+      holder.appendChild(exp);
+    }
+
+    document.getElementById('btn-back').disabled = currentIndex===0;
+    document.getElementById('btn-next').disabled = existingAnswer===null;
+    document.getElementById('btn-next').textContent = currentIndex===total-1 ? 'Finish' : 'Next \u2192';
+  }
+
+  function selectAnswer(idx){
+    const qObj = setQuestions[currentIndex];
+    const isCorrect = qObj.shuffled[idx].isCorrect;
+    answers[currentIndex] = {selectedIdx: idx, isCorrect};
+    renderQuestion();
+  }
+
+  function goNext(){
+    if(currentIndex < setQuestions.length-1){
+      currentIndex++;
+      renderQuestion();
+    } else {
+      showResults();
+    }
+  }
+
+  function goBack(){
+    if(currentIndex>0){
+      currentIndex--;
+      renderQuestion();
+    }
+  }
+
+  function closeTest(){
+    showScreen('screen-intro');
+  }
+
+  function showResults(){
+    const total = setQuestions.length;
+    const correctCount = answers.filter(a=>a && a.isCorrect).length;
+    const pct = Math.round((correctCount/total)*100);
+    document.getElementById('score-pct').textContent = pct + '%';
+    document.getElementById('score-frac').textContent = `${correctCount} / ${total}`;
+
+    const tagDiv = document.getElementById('pass-fail-tag');
+    const msgDiv = document.getElementById('result-msg');
+    const btnsDiv = document.getElementById('result-btns');
+    tagDiv.innerHTML = '';
+    btnsDiv.innerHTML = '';
+
+    const passed = pct >= 70;
+    const tag = document.createElement('div');
+    tag.className = passed ? 'pass-tag' : 'fail-tag';
+    tag.textContent = passed ? 'Passed' : 'Not Passed';
+    tagDiv.appendChild(tag);
+
+    let msg = '';
+    if(pct === 100){
+      msg = "Perfect score. You've fully mastered this section.";
+    } else if(pct >= 90){
+      msg = "Excellent work. Keep it up.";
+    } else if(pct >= 80){
+      msg = "Good result. Keep practicing to sharpen it further.";
+    } else if(passed){
+      msg = "You passed. A bit more review will make this even stronger.";
+    } else {
+      msg = "You didn't reach the 70% pass mark this time. Review the explanations and try again.";
+    }
+    msgDiv.textContent = msg;
+
+    const n = numSets();
+    if(passed){
+      if(n > 1 && currentSet < n){
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'primary';
+        nextBtn.textContent = `Continue to Set ${currentSet+1}`;
+        nextBtn.onclick = () => startSet(currentSet+1);
+        btnsDiv.appendChild(nextBtn);
+      } else if(n > 1 && currentSet === n){
+        const doneMsg = document.createElement('p');
+        doneMsg.style.textAlign = 'center';
+        doneMsg.style.color = '#8a8a8a';
+        doneMsg.style.fontSize = '13px';
+        doneMsg.textContent = "All sets complete.";
+        btnsDiv.appendChild(doneMsg);
+      }
+      const retakeBtn = document.createElement('button');
+      retakeBtn.className = 'secondary';
+      retakeBtn.textContent = 'Retake This Set';
+      retakeBtn.onclick = () => startSet(currentSet);
+      btnsDiv.appendChild(retakeBtn);
+    } else {
+      const retakeBtn = document.createElement('button');
+      retakeBtn.className = 'primary';
+      retakeBtn.textContent = 'Retake This Set';
+      retakeBtn.onclick = () => startSet(currentSet);
+      btnsDiv.appendChild(retakeBtn);
+    }
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'secondary';
+    closeBtn.textContent = 'Close Test';
+    closeBtn.onclick = closeTest;
+    btnsDiv.appendChild(closeBtn);
+
+    showScreen('screen-results');
+  }
+
+  initIntroScreen();
+
+</script>
+</body>
+</html>
