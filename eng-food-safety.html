@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Food Safety &amp; Hygiene (GPDP Portal)</title>
+<style>
+  :root{
+    --bg:#000000;
+    --fg:#ffffff;
+    --dim:#8a8a8a;
+    --line:#2a2a2a;
+    --line-soft:#1a1a1a;
+    --green:#22c55e;
+    --red:#ef4444;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--fg);
+    font-family:"Space Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+  }
+  .screen{
+    display:none;
+    min-height:100vh;
+    padding:28px 20px 60px;
+  }
+  .screen.active{display:block;}
+  .wrap{max-width:560px;margin:0 auto;}
+
+  /* Intro screen */
+  a.back{color:var(--dim);text-decoration:none;font-size:13px;}
+  a.back:hover{color:var(--fg);}
+  h1{font-size:22px;margin:18px 0 6px;}
+  p.sub{color:var(--dim);font-size:13px;margin:0 0 28px;}
+  .info-box{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px;
+    margin-bottom:14px;
+  }
+  .info-row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;}
+  .info-row .k{color:var(--dim);}
+  .set-btns{display:flex;flex-direction:column;gap:12px;margin-top:20px;}
+  button.primary{
+    background:var(--fg);color:#000;border:none;border-radius:8px;
+    padding:14px;font-size:15px;font-weight:600;cursor:pointer;
+  }
+  button.secondary{
+    background:transparent;color:var(--fg);border:1px solid var(--line);
+    border-radius:8px;padding:14px;font-size:15px;cursor:pointer;
+  }
+  button.secondary:hover, button.primary:hover{border-color:var(--fg);}
+
+  /* Quiz runner */
+  .quiz-top{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .close-btn{
+    background:transparent;border:1px solid var(--line);color:var(--dim);
+    border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;
+  }
+  .close-btn:hover{color:var(--fg);border-color:var(--fg);}
+  .q-count{font-size:13px;color:var(--dim);}
+  .progress-track{
+    height:4px;background:var(--line-soft);border-radius:4px;overflow:hidden;margin-bottom:28px;
+  }
+  .progress-fill{
+    height:100%;background:var(--fg);width:0%;transition:width .25s ease;
+  }
+  .q-text{font-size:18px;line-height:1.5;margin-bottom:22px;}
+  .options{display:flex;flex-direction:column;gap:10px;}
+  .option{
+    border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+    font-size:14.5px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;
+  }
+  .option:hover{border-color:var(--fg);}
+  .option .letter{color:var(--dim);font-weight:600;min-width:16px;}
+  .option.correct{border-color:var(--green);background:rgba(34,197,94,0.08);}
+  .option.correct .letter{color:var(--green);}
+  .option.wrong{border-color:var(--red);background:rgba(239,68,68,0.08);}
+  .option.wrong .letter{color:var(--red);}
+  .option.disabled{cursor:default;}
+  .option.dim-out{opacity:0.4;}
+  .explanation{
+    margin-top:16px;padding:14px 16px;border-radius:10px;
+    font-size:13.5px;line-height:1.5;border:1px solid var(--line);
+  }
+  .explanation.wrong-exp{border-color:var(--red);color:#f3a9a9;}
+  .explanation.correct-exp{border-color:var(--green);color:#a9e6bf;}
+  .nav-row{
+    display:flex;justify-content:space-between;margin-top:28px;gap:10px;
+  }
+  .nav-row button{flex:1;}
+  button.nav-btn{
+    background:transparent;border:1px solid var(--line);color:var(--fg);
+    border-radius:8px;padding:12px;font-size:14px;cursor:pointer;
+  }
+  button.nav-btn:hover{border-color:var(--fg);}
+  button.nav-btn:disabled{opacity:0.3;cursor:default;}
+  button.nav-btn:disabled:hover{border-color:var(--line);}
+
+  /* Results screen */
+  .score-circle{
+    width:140px;height:140px;border-radius:50%;border:3px solid var(--fg);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    margin:20px auto;
+  }
+  .score-pct{font-size:32px;font-weight:700;}
+  .score-frac{font-size:12px;color:var(--dim);margin-top:2px;}
+  .result-msg{text-align:center;font-size:15px;line-height:1.5;margin:20px 0 8px;}
+  .pass-tag, .fail-tag{
+    text-align:center;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .pass-tag{color:var(--green);}
+  .fail-tag{color:var(--red);}
+  .result-btns{display:flex;flex-direction:column;gap:12px;margin-top:28px;}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- INTRO SCREEN -->
+<div class="screen active" id="screen-intro">
+  <div class="wrap">
+    <a class="back" href="english.html">&larr; Back to English &amp; GPDP</a>
+    <h1>Food Safety &amp; Hygiene (GPDP Portal)</h1>
+    <p class="sub">English &amp; GPDP &middot; Topic 12</p>
+
+    <div class="info-box">
+      <div class="info-row"><span class="k">Total questions</span><span id="total-q-display">--</span></div>
+      <div class="info-row"><span class="k">Pass mark</span><span>70%</span></div>
+      <div class="info-row"><span class="k">Format</span><span id="format-display">--</span></div>
+    </div>
+
+    <div class="set-btns" id="set-btns"></div>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div class="screen" id="screen-quiz">
+  <div class="wrap">
+    <div class="quiz-top">
+      <button class="close-btn" onclick="closeTest()">Close Test</button>
+      <span class="q-count" id="q-count">Question 1 of 30</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options"></div>
+    <div id="explanation-holder"></div>
+    <div class="nav-row">
+      <button class="nav-btn" id="btn-back" onclick="goBack()">&larr; Back</button>
+      <button class="nav-btn" id="btn-next" onclick="goNext()" disabled>Next &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div class="screen" id="screen-results">
+  <div class="wrap">
+    <h1 style="text-align:center;">Set Complete</h1>
+    <div class="score-circle">
+      <div class="score-pct" id="score-pct">0%</div>
+      <div class="score-frac" id="score-frac">0 / 0</div>
+    </div>
+    <div id="pass-fail-tag"></div>
+    <p class="result-msg" id="result-msg"></p>
+    <div class="result-btns" id="result-btns"></div>
+  </div>
+</div>
+
+<script>
+  const questions = [
+ {
+  "q": "What does the acronym YOPI stand for in food safety?",
+  "options": [
+   "Young, Old, Pregnant, Immune-compromised",
+   "Yeast, Oxygen, Protein, Iron",
+   "Your Own Personal Inspection",
+   "Yield, Output, Portion, Inventory"
+  ],
+  "correct": 0,
+  "exp": "YOPI stands for Young (under 5), Old (over 65), Pregnant, and Immune-compromised — the populations most at risk from foodborne illness."
+ },
+ {
+  "q": "According to food safety guidance, what is described as the most important factor in food safety?",
+  "options": [
+   "Cleanliness",
+   "Menu variety",
+   "Portion size",
+   "Table decoration"
+  ],
+  "correct": 0,
+  "exp": "Cleanliness is described as the most important factor, since an unclean kitchen is often a sign of larger food safety problems."
+ },
+ {
+  "q": "What is the \"24-hour rule\" in food worker health?",
+  "options": [
+   "Stay home for 24 hours after the last symptom of vomiting, diarrhoea, fever with sore throat, or jaundice",
+   "Wash hands every 24 hours",
+   "Change gloves every 24 hours",
+   "Clean the kitchen every 24 hours"
+  ],
+  "correct": 0,
+  "exp": "The 24-hour rule means staying home for 24 hours after the last symptom of vomiting, diarrhoea, fever with sore throat, or jaundice."
+ },
+ {
+  "q": "Why should a food worker never work while sick?",
+  "options": [
+   "Germs can easily spread to food and other people if working while ill",
+   "It only affects how fast they work",
+   "It has no impact on food safety",
+   "It is only a concern for management, not the worker"
+  ],
+  "correct": 0,
+  "exp": "Germs can easily spread to food and colleagues if a sick worker continues to work, risking foodborne illness."
+ },
+ {
+  "q": "Besides being sick, what other health issue should be reported to a PIC?",
+  "options": [
+   "An open wound or sore",
+   "A change in hair colour",
+   "A new uniform size",
+   "A change of shift preference"
+  ],
+  "correct": 0,
+  "exp": "Open wounds or sores should be reported to the PIC, as they pose a contamination risk."
+ },
+ {
+  "q": "What is the difference between cleaning and sanitising?",
+  "options": [
+   "Cleaning uses soap and water; sanitising uses chemicals or heat to kill germs",
+   "They are the same process",
+   "Cleaning uses heat; sanitising uses only water",
+   "Sanitising always happens before cleaning"
+  ],
+  "correct": 0,
+  "exp": "Cleaning uses soap and water to remove dirt; sanitising uses chemicals or heat to kill germs to safer levels."
+ },
+ {
+  "q": "Why can a surface that looks clean still be unsafe?",
+  "options": [
+   "It can still have germs, which sanitising reduces to safer levels",
+   "Looking clean always means it is germ-free",
+   "Only visibly dirty surfaces carry germs",
+   "Clean-looking surfaces are always sanitised automatically"
+  ],
+  "correct": 0,
+  "exp": "A surface can look clean but still carry germs; sanitising is needed to reduce germs to safer levels."
+ },
+ {
+  "q": "What is the correct order for washing dishes using the three-sink method?",
+  "options": [
+   "Wash, rinse, sanitise",
+   "Sanitise, wash, rinse",
+   "Rinse, sanitise, wash",
+   "Wash, sanitise, rinse"
+  ],
+  "correct": 0,
+  "exp": "The three-sink method follows the order: wash, rinse, then sanitise."
+ },
+ {
+  "q": "When storing utensils and dishes, how far off the ground should they be kept?",
+  "options": [
+   "At least 6 inches",
+   "At least 1 inch",
+   "At least 24 inches",
+   "At least 3 inches"
+  ],
+  "correct": 0,
+  "exp": "Utensils and dishes should be stored at least 6 inches off the ground."
+ },
+ {
+  "q": "According to the \"food workers top 10\" key points, what is the first rule?",
+  "options": [
+   "Only work if you are healthy — if sick, don't work with food",
+   "Always wear gloves regardless of task",
+   "Wash utensils once per shift",
+   "Keep the kitchen door open at all times"
+  ],
+  "correct": 0,
+  "exp": "The first rule is to only work if healthy — if sick, do not work with food."
+ },
+ {
+  "q": "According to the \"food workers top 10,\" what temperatures should hot and cold food be kept at?",
+  "options": [
+   "Hot above 135°F, cold below 41°F",
+   "Hot above 100°F, cold below 50°F",
+   "Hot above 150°F, cold below 32°F",
+   "Hot above 120°F, cold below 45°F"
+  ],
+  "correct": 0,
+  "exp": "Hot food should be kept above 135°F and cold food below 41°F, according to the food workers top 10."
+ },
+ {
+  "q": "According to the \"food workers top 10,\" what is the correct order of steps for cleaning equipment?",
+  "options": [
+   "Wash, rinse, sanitise, air dry",
+   "Rinse, wash, air dry, sanitise",
+   "Sanitise, air dry, wash, rinse",
+   "Air dry, wash, rinse, sanitise"
+  ],
+  "correct": 0,
+  "exp": "The correct order is wash, rinse, sanitise, then air dry."
+ },
+ {
+  "q": "According to the \"food workers top 10,\" what should always be kept separate from other foods?",
+  "options": [
+   "Raw meat",
+   "Cooked rice",
+   "Bread",
+   "Dairy products"
+  ],
+  "correct": 0,
+  "exp": "Raw meat should always be kept away from other foods to prevent cross-contamination."
+ },
+ {
+  "q": "What are the two requirements of the ice bath cooling method?",
+  "options": [
+   "Food must cool to 70°F within 2 hours, then to 41°F within a further 4 hours",
+   "Food must cool to 41°F within 1 hour only",
+   "Food must be frozen solid within 30 minutes",
+   "Food must cool to room temperature only"
+  ],
+  "correct": 0,
+  "exp": "Food must cool to 70°F within 2 hours, then continue cooling to 41°F within a further 4 hours (6 hours total)."
+ },
+ {
+  "q": "Why is cooling considered one of the riskiest steps in food preparation?",
+  "options": [
+   "Bacteria can produce toxins during improper cooling that are not destroyed by reheating",
+   "Cooling always destroys the nutritional value of food",
+   "Cooling has no food safety risk at all",
+   "Cooling only matters for desserts"
+  ],
+  "correct": 0,
+  "exp": "Bacteria can produce toxins during improper cooling that reheating will not destroy, making cooling a high-risk step."
+ },
+ {
+  "q": "What bacteria is described as the most common cause of intestinal infection worldwide, commonly found in raw chicken?",
+  "options": [
+   "Campylobacter",
+   "Salmonella only",
+   "E. coli only",
+   "Listeria only"
+  ],
+  "correct": 0,
+  "exp": "Campylobacter is described as the most common cause of intestinal infection worldwide and thrives in the digestive tracts of chickens."
+ },
+ {
+  "q": "Which of the following is a time hands should always be washed, according to the material?",
+  "options": [
+   "After handling raw meat, fish, or poultry",
+   "Only before starting a shift",
+   "Only after eating a meal",
+   "Only once per day regardless of tasks"
+  ],
+  "correct": 0,
+  "exp": "Hands should be washed after handling raw meat, fish, or poultry, among many other key moments."
+ },
+ {
+  "q": "Which of the following is a time hands should always be washed, according to the material?",
+  "options": [
+   "After sneezing, coughing, or blowing one's nose",
+   "Only when visibly dirty",
+   "Only after touching food",
+   "Only before leaving the kitchen"
+  ],
+  "correct": 0,
+  "exp": "Hands should be washed after sneezing, coughing, or blowing one's nose."
+ },
+ {
+  "q": "Which of the following is a time hands should always be washed, according to the material?",
+  "options": [
+   "After using the bathroom",
+   "Only once at the start of a shift",
+   "Only if wearing gloves is not possible",
+   "Only after handling cash"
+  ],
+  "correct": 0,
+  "exp": "Hands should always be washed after using the bathroom."
+ },
+ {
+  "q": "What personal hygiene habits help prevent the spread of germs in the kitchen, according to the material?",
+  "options": [
+   "Trimmed fingernails, hair restraints, proper work clothing, and covering cuts/burns",
+   "Wearing strong perfume to mask odours",
+   "Wearing loose, untucked clothing",
+   "Avoiding handwashing to save time"
+  ],
+  "correct": 0,
+  "exp": "Trimmed fingernails, hair restraints, proper work clothing, and covering cuts/burns all help prevent the spread of germs."
+ }
+];
+
+  const SET_SIZE = 30;
+  let currentSet = 1;
+  let setQuestions = [];
+  let currentIndex = 0;
+  let answers = []; // {selected, isCorrect}
+
+  function numSets(){ return Math.ceil(questions.length / SET_SIZE); }
+
+  function initIntroScreen(){
+    const total = questions.length;
+    document.getElementById('total-q-display').textContent = total;
+    const n = numSets();
+    document.getElementById('format-display').textContent = n > 1 ? `Split into ${n} sets (30 max per set)` : 'Single set';
+    const btnHolder = document.getElementById('set-btns');
+    btnHolder.innerHTML = '';
+    if(n === 1){
+      const btn = document.createElement('button');
+      btn.className = 'primary';
+      btn.textContent = `Start Quiz \u00b7 ${total} Questions`;
+      btn.onclick = () => startSet(1);
+      btnHolder.appendChild(btn);
+    } else {
+      for(let i=1;i<=n;i++){
+        const start = (i-1)*SET_SIZE+1;
+        const end = Math.min(i*SET_SIZE, total);
+        const btn = document.createElement('button');
+        btn.className = i===1 ? 'primary' : 'secondary';
+        btn.textContent = `Start Set ${i} \u00b7 Questions ${start}\u2013${end}`;
+        btn.onclick = () => startSet(i);
+        btnHolder.appendChild(btn);
+      }
+    }
+  }
+
+  function shuffleOptions(qObj){
+    const opts = qObj.options.map((text,i)=>({text, isCorrect:i===qObj.correct}));
+    for(let i=opts.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [opts[i],opts[j]]=[opts[j],opts[i]];
+    }
+    return opts;
+  }
+
+  function startSet(setNum){
+    currentSet = setNum;
+    const start = (setNum-1)*SET_SIZE;
+    const end = Math.min(setNum*SET_SIZE, questions.length);
+    setQuestions = questions.slice(start, end);
+    setQuestions = setQuestions.map(q=>({...q, shuffled: shuffleOptions(q)}));
+    currentIndex = 0;
+    answers = new Array(setQuestions.length).fill(null);
+    showScreen('screen-quiz');
+    renderQuestion();
+  }
+
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function renderQuestion(){
+    const total = setQuestions.length;
+    const qObj = setQuestions[currentIndex];
+    document.getElementById('q-count').textContent = `Question ${currentIndex+1} of ${total}`;
+    document.getElementById('progress-fill').style.width = `${((currentIndex+1)/total)*100}%`;
+    document.getElementById('q-text').textContent = qObj.q;
+
+    const optionsDiv = document.getElementById('options');
+    optionsDiv.innerHTML = '';
+    const letters = ['A','B','C','D'];
+    const existingAnswer = answers[currentIndex];
+
+    qObj.shuffled.forEach((opt, idx)=>{
+      const div = document.createElement('div');
+      div.className = 'option';
+      div.innerHTML = `<span class="letter">${letters[idx]}</span><span>${opt.text}</span>`;
+      if(existingAnswer !== null){
+        div.classList.add('disabled');
+        if(opt.isCorrect) div.classList.add('correct');
+        if(idx === existingAnswer.selectedIdx && !opt.isCorrect) div.classList.add('wrong');
+        if(!opt.isCorrect && idx !== existingAnswer.selectedIdx) div.classList.add('dim-out');
+      } else {
+        div.onclick = () => selectAnswer(idx);
+      }
+      optionsDiv.appendChild(div);
+    });
+
+    const holder = document.getElementById('explanation-holder');
+    holder.innerHTML = '';
+    if(existingAnswer !== null){
+      const exp = document.createElement('div');
+      exp.className = 'explanation ' + (existingAnswer.isCorrect ? 'correct-exp' : 'wrong-exp');
+      exp.textContent = existingAnswer.isCorrect ? 'Correct.' : ('Not quite. ' + qObj.exp);
+      holder.appendChild(exp);
+    }
+
+    document.getElementById('btn-back').disabled = currentIndex===0;
+    document.getElementById('btn-next').disabled = existingAnswer===null;
+    document.getElementById('btn-next').textContent = currentIndex===total-1 ? 'Finish' : 'Next \u2192';
+  }
+
+  function selectAnswer(idx){
+    const qObj = setQuestions[currentIndex];
+    const isCorrect = qObj.shuffled[idx].isCorrect;
+    answers[currentIndex] = {selectedIdx: idx, isCorrect};
+    renderQuestion();
+  }
+
+  function goNext(){
+    if(currentIndex < setQuestions.length-1){
+      currentIndex++;
+      renderQuestion();
+    } else {
+      showResults();
+    }
+  }
+
+  function goBack(){
+    if(currentIndex>0){
+      currentIndex--;
+      renderQuestion();
+    }
+  }
+
+  function closeTest(){
+    showScreen('screen-intro');
+  }
+
+  function showResults(){
+    const total = setQuestions.length;
+    const correctCount = answers.filter(a=>a && a.isCorrect).length;
+    const pct = Math.round((correctCount/total)*100);
+    document.getElementById('score-pct').textContent = pct + '%';
+    document.getElementById('score-frac').textContent = `${correctCount} / ${total}`;
+
+    const tagDiv = document.getElementById('pass-fail-tag');
+    const msgDiv = document.getElementById('result-msg');
+    const btnsDiv = document.getElementById('result-btns');
+    tagDiv.innerHTML = '';
+    btnsDiv.innerHTML = '';
+
+    const passed = pct >= 70;
+    const tag = document.createElement('div');
+    tag.className = passed ? 'pass-tag' : 'fail-tag';
+    tag.textContent = passed ? 'Passed' : 'Not Passed';
+    tagDiv.appendChild(tag);
+
+    let msg = '';
+    if(pct === 100){
+      msg = "Perfect score. You've fully mastered this section.";
+    } else if(pct >= 90){
+      msg = "Excellent work. Keep it up.";
+    } else if(pct >= 80){
+      msg = "Good result. Keep practicing to sharpen it further.";
+    } else if(passed){
+      msg = "You passed. A bit more review will make this even stronger.";
+    } else {
+      msg = "You didn't reach the 70% pass mark this time. Review the explanations and try again.";
+    }
+    msgDiv.textContent = msg;
+
+    const n = numSets();
+    if(passed){
+      if(n > 1 && currentSet < n){
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'primary';
+        nextBtn.textContent = `Continue to Set ${currentSet+1}`;
+        nextBtn.onclick = () => startSet(currentSet+1);
+        btnsDiv.appendChild(nextBtn);
+      } else if(n > 1 && currentSet === n){
+        const doneMsg = document.createElement('p');
+        doneMsg.style.textAlign = 'center';
+        doneMsg.style.color = '#8a8a8a';
+        doneMsg.style.fontSize = '13px';
+        doneMsg.textContent = "All sets complete.";
+        btnsDiv.appendChild(doneMsg);
+      }
+      const retakeBtn = document.createElement('button');
+      retakeBtn.className = 'secondary';
+      retakeBtn.textContent = 'Retake This Set';
+      retakeBtn.onclick = () => startSet(currentSet);
+      btnsDiv.appendChild(retakeBtn);
+    } else {
+      const retakeBtn = document.createElement('button');
+      retakeBtn.className = 'primary';
+      retakeBtn.textContent = 'Retake This Set';
+      retakeBtn.onclick = () => startSet(currentSet);
+      btnsDiv.appendChild(retakeBtn);
+    }
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'secondary';
+    closeBtn.textContent = 'Close Test';
+    closeBtn.onclick = closeTest;
+    btnsDiv.appendChild(closeBtn);
+
+    showScreen('screen-results');
+  }
+
+  initIntroScreen();
+
+</script>
+</body>
+</html>

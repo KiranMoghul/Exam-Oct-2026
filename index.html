@@ -14,69 +14,69 @@
     --red:#ef4444;
   }
   *{box-sizing:border-box;}
-  button,input,select,textarea{font-family:inherit;}
   body{
     margin:0;
     background:var(--bg);
     color:var(--fg);
     font-family:"Space Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     min-height:100vh;
-    padding:32px 20px 60px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:48px 20px;
   }
-  .top{
-    max-width:560px;
-    margin:0 auto 28px;
-  }
-  a.back{
-    color:var(--dim);
-    text-decoration:none;
-    font-size:13px;
-  }
-  a.back:hover{color:var(--fg);}
   h1{
-    font-size:22px;
-    margin:16px 0 4px;
+    font-size:28px;
+    letter-spacing:0.02em;
+    margin:0 0 8px;
+    text-align:center;
   }
   p.sub{
     color:var(--dim);
-    font-size:13px;
-    margin:0;
+    margin:0 0 40px;
+    text-align:center;
+    font-size:14px;
   }
-  .list{
-    max-width:560px;
-    margin:28px auto 0;
+  .papers{
+    width:100%;
+    max-width:480px;
     display:flex;
     flex-direction:column;
-    gap:12px;
+    gap:16px;
   }
-  a.section-card, div.section-card.disabled{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+  a.paper-card{
+    display:block;
     border:1px solid var(--line);
-    border-radius:10px;
-    padding:16px 18px;
+    border-radius:12px;
+    padding:24px;
     text-decoration:none;
     color:var(--fg);
+    transition:border-color .15s ease, transform .15s ease;
   }
-  a.section-card:hover{border-color:var(--fg);}
-  .section-card.disabled{
-    color:var(--dim);
-    opacity:0.55;
+  a.paper-card:hover{
+    border-color:var(--fg);
+    transform:translateY(-2px);
   }
-  .s-num{
+  .paper-label{
     font-size:12px;
     color:var(--dim);
-    margin-right:12px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    margin-bottom:6px;
   }
-  .s-title{
-    font-size:15px;
+  .paper-title{
+    font-size:20px;
+    font-weight:600;
   }
-  .s-meta{
-    font-size:12px;
+  .paper-meta{
+    font-size:13px;
     color:var(--dim);
-    white-space:nowrap;
-    margin-left:12px;
+    margin-top:8px;
+  }
+  footer{
+    margin-top:56px;
+    color:var(--line);
+    font-size:11px;
   }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -84,21 +84,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="top">
-    <h1>DCA Exam Revision &mdash; Oct 2026</h1>
-    <p class="sub">10 must-know topics &middot; 170 MCQs &middot; tap a topic to practice</p>
+  <h1>DCA Exam Revision &mdash; Oct 2026</h1>
+  <p class="sub">Select a paper to begin</p>
+  <div class="papers">
+    <a class="paper-card" href="culinary.html">
+      <div class="paper-label">Paper 1</div>
+      <div class="paper-title">Culinary Arts</div>
+      <div class="paper-meta">10 topics &middot; 170 MCQs</div>
+    </a>
+    <a class="paper-card" href="english.html">
+      <div class="paper-label">Paper 2</div>
+      <div class="paper-title">English &amp; GPDP</div>
+      <div class="paper-meta">13 topics &middot; 213 MCQs</div>
+    </a>
   </div>
-  <div class="list">
-    <a class="section-card" href="stock-control.html"><span><span class="s-num">01</span><span class="s-title">Purchasing, Receiving, Storing &amp; Issuing of Stock</span></span><span class="s-meta">17 MCQs</span></a>
-    <a class="section-card" href="standard-recipes.html"><span><span class="s-num">02</span><span class="s-title">Standard Recipe Development</span></span><span class="s-meta">14 MCQs</span></a>
-    <a class="section-card" href="yield-costing.html"><span><span class="s-num">03</span><span class="s-title">Yield Testing &amp; Cost of Meals</span></span><span class="s-meta">17 MCQs</span></a>
-    <a class="section-card" href="service-plating.html"><span><span class="s-num">04</span><span class="s-title">Call &amp; Pickup System, Plate Presentation, Dining Room Setup &amp; Waiters' Working Styles</span></span><span class="s-meta">20 MCQs</span></a>
-    <a class="section-card" href="mother-sauces.html"><span><span class="s-num">05</span><span class="s-title">Mother Sauces</span></span><span class="s-meta">16 MCQs</span></a>
-    <a class="section-card" href="basic-nutrients.html"><span><span class="s-num">06</span><span class="s-title">Basic Nutrients &amp; Their Functions</span></span><span class="s-meta">16 MCQs</span></a>
-    <a class="section-card" href="doneness.html"><span><span class="s-num">07</span><span class="s-title">Doneness of Food</span></span><span class="s-meta">16 MCQs</span></a>
-    <a class="section-card" href="butchery.html"><span><span class="s-num">08</span><span class="s-title">Butchery — Parts of Poultry &amp; Beef, and Practice in Cutting Meat</span></span><span class="s-meta">20 MCQs</span></a>
-    <a class="section-card" href="food-allergies.html"><span><span class="s-num">09</span><span class="s-title">Food Allergies</span></span><span class="s-meta">14 MCQs</span></a>
-    <a class="section-card" href="stocks-soups-sauces.html"><span><span class="s-num">10</span><span class="s-title">Broths, Stocks, Soups, Consommés, Sauces, Dressings, Gravies &amp; Spreads</span></span><span class="s-meta">20 MCQs</span></a>
-  </div>
+  <footer>COTHM DCA &middot; Oct 2026</footer>
 </body>
 </html>
